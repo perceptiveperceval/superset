@@ -36,6 +36,9 @@ import TableChartPlugin from '@superset-ui/plugin-chart-table';
 import TreemapChartPlugin from '@superset-ui/legacy-plugin-chart-treemap';
 import { WordCloudChartPlugin } from '@superset-ui/plugin-chart-word-cloud';
 import WorldMapChartPlugin from '@superset-ui/legacy-plugin-chart-world-map';
+import StatusChartPlugin from '@superset-custom/plugin-chart-status';
+import WaterfallChartPlugin from '@superset-custom/plugin-chart-waterfall';
+
 import {
   AreaChartPlugin,
   BarChartPlugin,
@@ -168,6 +171,8 @@ export default class MainPreset extends Preset {
         new EchartsTreeChartPlugin().configure({ key: 'tree_chart' }),
         new EchartsSunburstChartPlugin().configure({ key: 'sunburst_v2' }),
         new HandlebarsChartPlugin().configure({ key: 'handlebars' }),
+        new StatusChartPlugin().configure({ key: 'nielsen-oss-status' }),
+        new WaterfallChartPlugin().configure({ key: 'nielsen-oss-waterfall' }),
         ...experimentalplugins,
       ],
     });
