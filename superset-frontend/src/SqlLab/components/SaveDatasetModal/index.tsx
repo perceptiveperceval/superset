@@ -161,6 +161,7 @@ export const SaveDatasetModal = ({
     state => state.common?.conf?.DEFAULT_VIZ_TYPE || 'table',
   );
 
+    
   const getDefaultDatasetName = () =>
     `${datasource?.name || UNTITLED} ${moment().format('MM/DD/YYYY HH:mm:ss')}`;
   const [datasetName, setDatasetName] = useState(getDefaultDatasetName());

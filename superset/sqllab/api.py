@@ -41,8 +41,10 @@ from superset.sqllab.exceptions import (
 )
 from superset.sqllab.execution_context_convertor import ExecutionContextConvertor
 from superset.sqllab.query_render import SqlQueryRenderImpl
+from superset.sqllab.save_query_render import SqlSaveQueryRenderImpl
 from superset.sqllab.schemas import (
     ExecutePayloadSchema,
+    ExecuteSavePayloadSchema,
     QueryExecutionResponseSchema,
     sql_lab_get_results_schema,
 )
@@ -51,7 +53,7 @@ from superset.sqllab.sql_json_executer import (
     SqlJsonExecutor,
     SynchronousSqlJsonExecutor,
 )
-from superset.sqllab.sqllab_execution_context import SqlJsonExecutionContext
+from superset.sqllab.sqllab_execution_context import SqlJsonExecutionContext, SqlJsonSaveContext
 from superset.sqllab.validators import CanAccessQueryValidatorImpl
 from superset.superset_typing import FlaskResponse
 from superset.utils import core as utils
@@ -71,6 +73,7 @@ class SqlLabRestApi(BaseSupersetApi):
     class_permission_name = "SQLLab"
 
     execute_model_schema = ExecutePayloadSchema()
+    save_execute_model_schema = ExecuteSavePayloadSchema()
 
     apispec_parameter_schemas = {
         "sql_lab_get_results_schema": sql_lab_get_results_schema,
@@ -270,6 +273,80 @@ class SqlLabRestApi(BaseSupersetApi):
             )
             return self.response(response_status, **payload)
 
+    @expose("/addmodel/", methods=["POST"])
+    @protect()
+    @statsd_metrics
+    @requires_json
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
+        f".export_csv",
+        log_to_statsd=False,
+    )
+    def export_query_db(self, client_id: str) -> CsvResponse:
+        """Exports the SQL query to DB
+        ---
+        post:
+          description: >-
+            Exports the SQL query to DB
+          requestBody:
+            description: SQL query and params
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ExecutePayloadSchema'
+          responses:
+            200:
+              description: Query execution result
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/QueryExecutionResponseSchema'
+            202:
+              description: Query execution result, query still running
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/QueryExecutionResponseSchema'
+            400:
+              $ref: '#/components/responses/400'
+            401:
+              $ref: '#/components/responses/401'
+            403:
+              $ref: '#/components/responses/403'
+            404:
+              $ref: '#/components/responses/404'
+            500:
+              $ref: '#/components/responses/500'
+        """
+        try:
+            self.save_execute_model_schema.load(request.json)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)
+
+        try:
+            log_params = {
+                "user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))
+            }
+            execution_context = SqlJsonSaveContext(request.json)
+            command = self._create_sql_json_command_model(execution_context, log_params)
+            command_result: CommandResult = command._run_sql_json_exec_from_scratch()
+
+            response_status = (
+                202
+                if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING
+                else 200
+            )
+            # return the execution result without special encoding
+            return json_success(command_result["payload"], response_status)
+        except SqlLabException as ex:
+            payload = {"errors": [ex.to_dict()]}
+
+            response_status = (
+                403 if isinstance(ex, QueryIsForbiddenToAccessException) else ex.status
+            )
+            return self.response(response_status, **payload)
+
     @staticmethod
     def _create_sql_json_command(
         execution_context: SqlJsonExecutionContext, log_params: Optional[Dict[str, Any]]
@@ -293,7 +370,6 @@ class SqlLabRestApi(BaseSupersetApi):
             config["SQLLAB_CTAS_NO_LIMIT"],
             log_params,
         )
-
     @staticmethod
     def _create_sql_json_executor(
         execution_context: SqlJsonExecutionContext, query_dao: QueryDAO
@@ -309,3 +385,27 @@ class SqlLabRestApi(BaseSupersetApi):
                 is_feature_enabled("SQLLAB_BACKEND_PERSISTENCE"),
             )
         return sql_json_executor
+    
+    @staticmethod
+    def _create_sql_json_command_model(
+        execution_context: SqlJsonExecutionContext, log_params: Optional[Dict[str, Any]]
+    ) -> ExecuteSqlCommand:
+        query_dao = QueryDAO()
+        sql_json_executor = SqlLabRestApi._create_sql_json_executor(
+            execution_context, query_dao
+        )
+        execution_context_convertor = ExecutionContextConvertor()
+        execution_context_convertor.set_max_row_in_display(
+            int(config.get("DISPLAY_MAX_ROW"))  # type: ignore
+        )
+        return ExecuteSqlCommand(
+            execution_context,
+            query_dao,
+            DatabaseDAO(),
+            CanAccessQueryValidatorImpl(),
+            SqlSaveQueryRenderImpl(get_template_processor, execution_context.get_materialization_num()),
+            sql_json_executor,
+            execution_context_convertor,
+            config["SQLLAB_CTAS_NO_LIMIT"],
+            log_params,
+        )

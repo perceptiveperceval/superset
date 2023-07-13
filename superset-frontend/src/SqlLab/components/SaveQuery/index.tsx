@@ -29,9 +29,15 @@ import {
   SaveDatasetModal,
   ISaveableDatasource,
 } from 'src/SqlLab/components/SaveDatasetModal';
+import SaveDataModelActionButton from 'src/SqlLab/components/SaveDatasetActionButton';
+import {
+  SaveDataModelModal
+} from 'src/SqlLab/components/SaveDataModelModal';
+
 import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
 import useQueryEditor from 'src/SqlLab/hooks/useQueryEditor';
 import { QueryEditor } from 'src/SqlLab/types';
+import { runQuery } from 'src/SqlLab/actions/sqlLab';
 
 interface SaveQueryProps {
   queryEditorId: string;
@@ -40,7 +46,20 @@ interface SaveQueryProps {
   onUpdate: (arg0: QueryPayload, id: string) => void;
   saveQueryWarning: string | null;
   database: Record<string, any>;
+  allowAsync: boolean;
+  runQueryModel: (c?: boolean) => void;
+  handleMaterializationNum: (materializationNum: number) => void;
 }
+
+const onClickModel = (
+  allowAsync: boolean,
+  runQueryModel: (c?: boolean) => void = () => undefined,
+): void => {
+  if (allowAsync) {
+    return runQueryModel(true);
+  }
+  return runQueryModel(false);
+};
 
 type QueryPayload = {
   name: string;
@@ -68,7 +87,9 @@ const SaveQuery = ({
   saveQueryWarning = null,
   database,
   columns,
+  handleMaterializationNum,
 }: SaveQueryProps) => {
+
   const queryEditor = useQueryEditor(queryEditorId, [
     'autorun',
     'name',
@@ -96,8 +117,13 @@ const SaveQuery = ({
     query.description || '',
   );
   const [label, setLabel] = useState<string>(defaultLabel);
+  
   const [showSave, setShowSave] = useState<boolean>(false);
   const [showSaveDatasetModal, setShowSaveDatasetModal] = useState(false);
+
+  // const [showSaveModel, setShowSaveModel] = useState<boolean>(false);
+  const [showSaveDataModelModal, setShowSaveDataModelModal] = useState(false);
+
   const isSaved = !!query.remoteId;
   const canExploreDatabase = !!database?.allows_virtual_table_explore;
 
@@ -105,6 +131,9 @@ const SaveQuery = ({
     <Menu>
       <Menu.Item onClick={() => setShowSaveDatasetModal(true)}>
         {t('Save dataset')}
+      </Menu.Item>
+      <Menu.Item onClick={() => setShowSaveDataModelModal(true)}>
+        {t('Save as Model')}
       </Menu.Item>
     </Menu>
   );
@@ -192,6 +221,15 @@ const SaveQuery = ({
         buttonTextOnSave={t('Save & Explore')}
         buttonTextOnOverwrite={t('Overwrite & Explore')}
         datasource={getDatasourceAsSaveableDataset(query)}
+      />
+      <SaveDataModelModal
+        visible={showSaveDataModelModal}
+        onHide={() => setShowSaveDataModelModal(false)}
+        buttonTextOnSave={t('Save & Explore')}  
+        buttonTextOnOverwrite={t('Overwrite & Explore')}
+        datasource={getDatasourceAsSaveableDataset(query)}
+        runQueryModel={() => onClickModel}
+        handleMaterializationNum={handleMaterializationNum}
       />
       <Modal
         className="save-query-modal"

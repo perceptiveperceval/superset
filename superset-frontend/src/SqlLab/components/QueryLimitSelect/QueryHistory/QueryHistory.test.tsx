@@ -1,4 +1,5 @@
-/* Licensed to the Apache Software Foundation (ASF) under one
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -15,19 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import React from 'react';
+import { render, screen } from 'spec/helpers/testing-library';
+import QueryHistory from 'src/SqlLab/components/QueryHistory';
 
-/* eslint-disable global-require */
-const loadModule = () => {
-  let module;
-  try {
-    // @ts-ignore
-    module = {}; // eslint-disable-line import/no-unresolved
-  } catch (e) {
-    module = {};
-  }
-  return module;
+const mockedProps = {
+  queries: [],
+  displayLimit: 1000,
+  latestQueryId: 'yhMUZCGb',
 };
 
-const supersetText = loadModule();
+const setup = (overrides = {}) => (
+  <QueryHistory {...mockedProps} {...overrides} />
+);
 
-export default supersetText;
+describe('QueryHistory', () => {
+  it('Renders an empty state for query history', () => {
+    render(setup());
+
+    const emptyStateText = screen.getByText(
+      /run a query to display query history/i,
+    );
+
+    expect(emptyStateText).toBeVisible();
+  });
+});

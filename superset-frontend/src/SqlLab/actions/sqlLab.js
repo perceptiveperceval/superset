@@ -1559,3 +1559,82 @@ export function queryEditorSetFunctionNames(queryEditor, dbId) {
       });
   };
 }
+
+export function runQueryModel(query) {
+  return function (dispatch) {
+    dispatch(startQuery(query));
+    const postPayload = {
+      client_id: query.id,
+      database_id: query.dbId,
+      json: true,
+      runAsync: query.runAsync,
+      schema: query.schema,
+      sql: cleanSqlComments(query.sql),
+      sql_editor_id: query.sqlEditorId,
+      tab: query.tab,
+      tmp_table_name: query.tempTable,
+      select_as_cta: query.ctas,
+      ctas_method: query.ctas_method,
+      templateParams: query.templateParams,
+      queryLimit: query.queryLimit,
+      expand_data: true,
+      save_type: query.materializationNum
+    };
+
+    const search = window.location.search || '';
+    return SupersetClient.post({
+      endpoint: `/api/v1/sqllab/addmodel/${search}`,
+      body: JSON.stringify(postPayload),
+      headers: { 'Content-Type': 'application/json' },
+      parseMethod: 'json-bigint',
+    })
+      .then(({ json }) => {
+        if (!query.runAsync) {
+          dispatch(querySuccess(query, json));
+        }
+      })
+      .catch(response =>
+        getClientErrorObject(response).then(error => {
+          let message =
+            error.error ||
+            error.message ||
+            error.statusText ||
+            t('Unknown error');
+          if (message.includes('CSRF token')) {
+            message = t(COMMON_ERR_MESSAGES.SESSION_TIMED_OUT);
+          }
+          dispatch(queryFailed(query, message, error.link, error.errors));
+        }),
+      );
+  };
+}
+
+export function runQueryFromSqlEditorModel(
+  database,
+  queryEditor,
+  defaultQueryLimit,
+  tempTable,
+  ctas,
+  ctasMethod,
+  materializationNum,
+) {
+  return function (dispatch, getState) {
+    const qe = getUpToDateQuery(getState(), queryEditor, queryEditor.id);
+    const query = {
+      dbId: qe.dbId,
+      sql: qe.selectedText || qe.sql,
+      sqlEditorId: qe.id,
+      tab: qe.name,
+      schema: qe.schema,
+      tempTable,
+      templateParams: qe.templateParams,
+      queryLimit: qe.queryLimit || defaultQueryLimit,
+      runAsync: database ? database.allow_run_async : false,
+      ctas,
+      ctas_method: ctasMethod,
+      updateTabState: !qe.selectedText,
+      materializationNum: materializationNum
+    };
+    dispatch(runQueryModel(query));
+  };
+}

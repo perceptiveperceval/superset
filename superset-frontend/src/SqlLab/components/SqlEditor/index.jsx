@@ -59,6 +59,7 @@ import {
   setActiveSouthPaneTab,
   updateSavedQuery,
   validateQuery,
+  runQueryFromSqlEditorModel,
 } from 'src/SqlLab/actions/sqlLab';
 import {
   STATE_TYPE_MAP,
@@ -248,6 +249,12 @@ const SqlEditor = ({
   const [createAs, setCreateAs] = useState('');
   const [showEmptyState, setShowEmptyState] = useState(false);
 
+  const [materializationNum, setMaterializationNum] = useState(1);
+  const handleMaterializationNum = (materializationNum) => {
+    setMaterializationNum(materializationNum);
+    console.log("materialize num");
+    console.log(materializationNum);
+  };
   const sqlEditorRef = useRef(null);
   const northPaneRef = useRef(null);
 
@@ -265,9 +272,30 @@ const SqlEditor = ({
           ctasArg ? ctas : '',
           ctasArg,
           ctas_method,
+          materializationNum
         ),
       );
       dispatch(setActiveSouthPaneTab('Results'));
+    },
+    [ctas, database, defaultQueryLimit, dispatch, queryEditor, materializationNum],
+  );
+  
+  const startQueryModel = useCallback(
+    (ctasArg = false, ctas_method = CtasEnum.TABLE) => {
+      if (!database) {
+        return;
+      }
+
+      dispatch(
+        runQueryFromSqlEditorModel(
+          database,
+          queryEditor,
+          defaultQueryLimit,
+          ctasArg ? ctas : '',
+          ctasArg,
+          ctas_method,
+        ),
+      );
     },
     [ctas, database, defaultQueryLimit, dispatch, queryEditor],
   );
@@ -282,6 +310,12 @@ const SqlEditor = ({
   const runQuery = () => {
     if (database) {
       startQuery();
+    }
+  };
+
+  const runQueryModel = () => {
+    if (database) {
+      startQueryModel();
     }
   };
 
@@ -649,6 +683,9 @@ const SqlEditor = ({
               }
               saveQueryWarning={saveQueryWarning}
               database={database}
+              allowAsync={database ? database.allow_run_async : false}
+              runQueryModel={runQueryModel}
+              handleMaterializationNum={handleMaterializationNum}
             />
           </span>
           <span>
