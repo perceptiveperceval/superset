@@ -34,6 +34,7 @@ from superset.commands.importers.exceptions import (
     NoValidFilesFoundError,
 )
 from superset.commands.importers.v1.utils import get_contents_from_bundle
+from superset.connectors.sqla.models import TableColumn
 from superset.constants import MODEL_API_RW_METHOD_PERMISSION_MAP, RouteMethod
 from superset.databases.commands.create import CreateDatabaseCommand
 from superset.databases.commands.delete import DeleteDatabaseCommand
@@ -98,7 +99,9 @@ from superset.views.base_api import (
     requires_json,
     statsd_metrics,
 )
-
+from superset import db
+from superset.annotation_layers.schemas import get_delete_ids_schema
+from superset.connectors.sqla.models import SqlaTable, TableColumn
 logger = logging.getLogger(__name__)
 
 
@@ -120,6 +123,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         "validate_parameters",
         "validate_sql",
         "delete_ssh_tunnel",
+        "get_tables_descriptions",
     }
     resource_name = "database"
     class_permission_name = "Database"
@@ -1410,3 +1414,63 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                 exc_info=True,
             )
             return self.response_400(message=str(ex))
+                        
+    @event_logger.log_this
+    @safe
+    @statsd_metrics
+    @rison(get_delete_ids_schema) 
+    @expose("/get_tables_descriptions/", methods=["GET"])
+    def get_tables_descriptions(self, **kwargs: Any) -> Response:
+        """Response
+        Returns an descriptions from all tables of a database
+        ---
+        get:
+          description: >-
+            Fetches 
+          parameters:
+          - in: query
+            name: q
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/get_delete_ids_schema'
+          responses:
+            200:
+              description: Result contains the tables' descriptions
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                        email:
+                          type: string
+            401:
+              $ref: '#/components/responses/401'
+            400:
+              $ref: '#/components/responses/400'
+            500:
+              $ref: '#/components/responses/500'
+        """
+        db_ids = kwargs["rison"]
+        try:
+
+          table_query = (
+                  db.session.query(SqlaTable)
+                  .filter(SqlaTable.database_id.in_(db_ids),
+                          SqlaTable.is_sqllab_view==0)
+                  )
+          table_ids = [r.id for r in table_query]
+          column_query = (
+                  db.session.query(TableColumn)
+                  .filter(TableColumn.table_id.in_(table_ids))
+                  )
+          res = {}
+          for table in table_query:
+              res[table.id]={"table_name":table.table_name, "table_desc":table.description, "columns":[]}
+              for col in column_query:
+                  res[table.id]["columns"].append({
+                      col.column_name:col.description
+                  })
+          return self.response(200, result = res)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)

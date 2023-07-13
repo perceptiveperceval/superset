@@ -186,7 +186,7 @@ class SecurityRestApi(BaseSupersetApi):
     @statsd_metrics                  
     @rison(get_delete_ids_schema) 
     @expose("/get_email/", methods=["GET"])
-    def get_email_2(self, **kwargs: Any) -> Response:
+    def get_email(self, **kwargs: Any) -> Response:
         """Response
         Returns an user email from Superset metadatabase
         ---
@@ -234,3 +234,4 @@ class SecurityRestApi(BaseSupersetApi):
           return self.response(200, emails=emails)
         except ValidationError as error:
             return self.response_400(message=error.messages)
+    
