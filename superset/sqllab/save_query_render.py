@@ -23,7 +23,7 @@ from flask_babel import gettext as __, ngettext
 from jinja2 import TemplateError
 from jinja2.meta import find_undeclared_variables
 
-from superset import is_feature_enabled
+from superset import is_feature_enabled, app
 from superset.errors import SupersetErrorType
 from superset.sqllab.commands.execute import SqlQueryRender
 from superset.sqllab.exceptions import SqlLabException
@@ -60,13 +60,16 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
                 query_model.sql, **execution_context.template_params
             )
             final_query = """
-            INSERT INTO query(name, query_string, materialization, user_id, description, insert_time)
+            INSERT INTO {schema_name}.{table_name}(name, query_string, materialization, user_id, description, insert_time)
             VALUES (\'{name}\' ,\'{original_query}\', {materialization}, {user_id}, \'{description}\', NOW())
             """.format(name=execution_context.name,
                        original_query=rendered_query, 
                        materialization=execution_context.materialization_num,
                        user_id=execution_context.user_id,
-                       description=execution_context.description)
+                       description=execution_context.description,
+                       schema_name=app.config["SAVE_QUERY_SCHEMA"],
+                       table_name=app.config["SAVE_QUERY_TABLE"],
+                       )
             self._validate(execution_context, final_query, sql_template_processor)
             return final_query
         except TemplateError as ex:

@@ -1558,6 +1558,13 @@ class ExtraRelatedQueryFilters(TypedDict, total=False):
 
 EXTRA_RELATED_QUERY_FILTERS: ExtraRelatedQueryFilters = {}
 
+if "SAVE_QUERY_SCHEMA" in os.environ:
+    SAVE_QUERY_SCHEMA = os.environ["SAVE_QUERY_SCHEMA"]
+else: SAVE_QUERY_SCHEMA = "query"
+
+if "SAVE_QUERY_TABLE" in os.environ:
+    SAVE_QUERY_SCHEMA = os.environ["SAVE_QUERY_TABLE"]
+else: SAVE_QUERY_SCHEMA = "saved_query"
 
 # -------------------------------------------------------------------
 # *                WARNING:  STOP EDITING  HERE                    *

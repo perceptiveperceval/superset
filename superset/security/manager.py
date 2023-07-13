@@ -650,8 +650,9 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
                 .distinct()
             )
             accessible_schemas.update([table.schema for table in tables])
-
-        return [s for s in schemas if s in accessible_schemas]
+        res = [s for s in schemas if s in accessible_schemas]
+        res.remove(current_app.config["SAVE_QUERY_SCHEMA"])
+        return res
 
     def get_datasources_accessible_by_user(  # pylint: disable=invalid-name
         self,
