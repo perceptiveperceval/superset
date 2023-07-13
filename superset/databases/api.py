@@ -558,6 +558,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                 force=kwargs["rison"].get("force", False),
             )
             schemas = security_manager.get_schemas_accessible_by_user(database, schemas)
+            schemas = [schema for schema in schemas if schema not in app.config["HIDDEN_SCHEMAS"]]
             return self.response(200, result=schemas)
         except OperationalError:
             return self.response(
