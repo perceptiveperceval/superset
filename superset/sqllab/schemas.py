@@ -42,7 +42,9 @@ class ExecutePayloadSchema(Schema):
     expand_data = fields.Boolean(allow_none=True)
 
 class ExecuteSavePayloadSchema(ExecutePayloadSchema):
-    save_type = fields.String(allow_none=True)
+    save_type = fields.Integer(allow_none=True)
+    description = fields.String(allow_none=True)
+    name = fields.String(allow_none=True) 
 
 class QueryResultSchema(Schema):
     changedOn = fields.DateTime()

@@ -250,11 +250,22 @@ const SqlEditor = ({
   const [showEmptyState, setShowEmptyState] = useState(false);
 
   const [materializationNum, setMaterializationNum] = useState(1);
+  const [description, setDescription] = useState("")
+  const [modelName, setModelName] = useState("")
   const handleMaterializationNum = (materializationNum) => {
     setMaterializationNum(materializationNum);
     console.log("materialize num");
     console.log(materializationNum);
   };
+  const handleDescription = (description) => {
+    setDescription(description);
+  };
+  const handleModelName = (modelName) => {
+    setModelName(modelName);
+    console.log("materialize num");
+    console.log(modelName);
+  };
+  modelName
   const sqlEditorRef = useRef(null);
   const northPaneRef = useRef(null);
 
@@ -272,12 +283,11 @@ const SqlEditor = ({
           ctasArg ? ctas : '',
           ctasArg,
           ctas_method,
-          materializationNum
         ),
       );
       dispatch(setActiveSouthPaneTab('Results'));
     },
-    [ctas, database, defaultQueryLimit, dispatch, queryEditor, materializationNum],
+    [ctas, database, defaultQueryLimit, dispatch, queryEditor],
   );
   
   const startQueryModel = useCallback(
@@ -294,10 +304,13 @@ const SqlEditor = ({
           ctasArg ? ctas : '',
           ctasArg,
           ctas_method,
+          materializationNum,
+          description,
+          modelName
         ),
       );
     },
-    [ctas, database, defaultQueryLimit, dispatch, queryEditor],
+    [ctas, database, defaultQueryLimit, dispatch, queryEditor, materializationNum, description, modelName],
   );
 
   const stopQuery = useCallback(() => {
@@ -315,6 +328,7 @@ const SqlEditor = ({
 
   const runQueryModel = () => {
     if (database) {
+      console.log("run save model query");
       startQueryModel();
     }
   };
@@ -686,6 +700,8 @@ const SqlEditor = ({
               allowAsync={database ? database.allow_run_async : false}
               runQueryModel={runQueryModel}
               handleMaterializationNum={handleMaterializationNum}
+              handleDescription={handleDescription}
+              handleModelName={handleModelName}
             />
           </span>
           <span>

@@ -184,8 +184,10 @@ class SqlJsonExecutionContext:  # pylint: disable=too-many-instance-attributes
         return "query '{}'".format(self.sql)
 
 @dataclass
-class SqlJsonSaveContext():
+class SqlJsonSaveContext(SqlJsonExecutionContext):
     materialization_num: int
+    name:str
+    description: str
     def __init__(self, query_params: Dict[str, Any]):
         self.create_table_as_select = None
         self.database = None
@@ -195,7 +197,9 @@ class SqlJsonSaveContext():
 
     def _init_from_query_params(self, query_params: Dict[str, Any]) -> None:
         SqlJsonExecutionContext._init_from_query_params(self, query_params)
-        self.materialization_num = cast(int, query_params.get("materialization_num"))
+        self.materialization_num = cast(int, query_params.get("save_type"))
+        self.description = cast(str, query_params.get("description"))
+        self.name = cast(str, query_params.get("name"))
     def get_materialization_num(self) -> int:
         return self.materialization_num    
 

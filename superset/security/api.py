@@ -14,12 +14,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import json
 import logging
 from typing import Any, Dict
 
-from flask import request, Response
+from flask import flash, request, Response
 from flask_appbuilder import expose
-from flask_appbuilder.api import safe
+from flask_appbuilder.api import safe, rison
 from flask_appbuilder.security.decorators import permission_name, protect
 from flask_wtf.csrf import generate_csrf
 from marshmallow import EXCLUDE, fields, post_load, Schema, ValidationError
@@ -29,9 +30,15 @@ from superset.embedded_dashboard.commands.exceptions import (
     EmbeddedDashboardNotFoundError,
 )
 from superset.extensions import event_logger
+from superset.models.ab_user import AboutUser
 from superset.security.guest_token import GuestTokenResourceType
+from superset.superset_typing import FlaskResponse
+from superset.tasks.utils import get_current_user
+from superset.views.base import json_success
 from superset.views.base_api import BaseSupersetApi, statsd_metrics
-
+from superset.utils import core as utils
+from superset import db
+from superset.annotation_layers.schemas import get_delete_ids_schema
 logger = logging.getLogger(__name__)
 
 
@@ -73,8 +80,17 @@ class GuestTokenCreateSchema(PermissiveSchema):
     resources = fields.List(fields.Nested(ResourceSchema), required=True)
     rls = fields.List(fields.Nested(RlsRuleSchema), required=True)
 
+class GetEmailSchema(PermissiveSchema):
+    user_ids = fields.List(fields.Integer())
+
+class NoticeSchema(PermissiveSchema):
+    name = fields.String()
+    status = fields.String()
+    exception = fields.String()
 
 guest_token_create_schema = GuestTokenCreateSchema()
+email_create_schema = GetEmailSchema()
+notice_schema = NoticeSchema()
 
 
 class SecurityRestApi(BaseSupersetApi):
@@ -161,5 +177,164 @@ class SecurityRestApi(BaseSupersetApi):
             return self.response(200, token=token)
         except EmbeddedDashboardNotFoundError as error:
             return self.response_400(message=error.message)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)
+        
+    @event_logger.log_this
+    @protect()
+    @safe
+    @statsd_metrics              
+    @expose("/notify_model/", methods=["POST"])
+    def notify_model(self) -> Response:
+        """Response
+        Notices all logged in user
+        ---
+        post:
+          description: >-
+            Notices all logged in user
+          requestBody:
+            description: Parameters for the notification
+            required: true
+            content:
+              application/json:
+                schema: NoticeSchema
+          responses:
+            200:
+              description: Result contains the user email
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                        email:
+                          type: string
+            401:
+              $ref: '#/components/responses/401'
+            400:
+              $ref: '#/components/responses/400'
+            500:
+              $ref: '#/components/responses/500'
+        """
+        try:
+          body = notice_schema.load(request.json)
+          model_name = body["name"]
+          status = body["status"]
+          if get_current_user():
+              if status: 
+                  flash("Model {model_name} is available.".format(model_name=model_name))
+              else:
+                  exception = body["exception"]
+                  flash("Model {model_name} can not be saved. \n {exception}".format(model_name=model_name, exception=exception))
+          return self.response(200)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)
+
+    @event_logger.log_this
+    @protect()
+    @safe
+    @statsd_metrics                   
+    @expose("/get_email/", methods=["POST"])
+    def get_email(self) -> Response:
+        """Response
+        Returns an user email from Superset metadatabase
+        ---
+        post:
+          description: >-
+            Fetches a user email
+          requestBody:
+            description: Parameters for the email
+            required: true
+            content:
+              application/json:
+                schema: GetEmailSchema
+          responses:
+            200:
+              description: Result contains the user email
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                        email:
+                          type: string
+            401:
+              $ref: '#/components/responses/401'
+            400:
+              $ref: '#/components/responses/400'
+            500:
+              $ref: '#/components/responses/500'
+        """
+        try:
+          body = email_create_schema.load(request.json)
+          ids = body["user_ids"]
+
+          # id = request.json["user_id"]
+          query = (
+                  db.session.query(AboutUser)
+                  .filter(AboutUser.id.in_(ids))
+                  # .with_entities(AboutUser.email)
+                  )
+          emails = [r.email for r in query]
+
+          # payload = {
+          #     "email": query.email
+          # }
+          # print(query)
+          return self.response(200, emails=emails)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)
+        
+    @event_logger.log_this
+    @protect()
+    @safe
+    @statsd_metrics                  
+    @rison(get_delete_ids_schema) 
+    @expose("/get_email_2/", methods=["GET"])
+    def get_email_2(self, **kwargs: Any) -> Response:
+        """Response
+        Returns an user email from Superset metadatabase
+        ---
+        get:
+          description: >-
+            Fetches a user email
+          parameters:
+          - in: query
+            name: q
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/get_delete_ids_schema'
+          responses:
+            200:
+              description: Result contains the user email
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                        email:
+                          type: string
+            401:
+              $ref: '#/components/responses/401'
+            400:
+              $ref: '#/components/responses/400'
+            500:
+              $ref: '#/components/responses/500'
+        """
+        ids = kwargs["rison"]
+        try:
+
+          query = (
+                  db.session.query(AboutUser)
+                  .filter(AboutUser.id.in_(ids))
+                  # .with_entities(AboutUser.email)
+                  )
+          emails = [r.email for r in query]
+
+          # payload = {
+          #     "email": query.email
+          # }
+          # print(query)
+          return self.response(200, emails=emails)
         except ValidationError as error:
             return self.response_400(message=error.messages)

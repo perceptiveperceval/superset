@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo} from 'react';
 import { Radio } from 'src/components/Radio';
 import { RadioChangeEvent, AsyncSelect } from 'src/components';
 import { Input, TextArea } from 'src/components/Input';
@@ -53,7 +53,9 @@ import { postFormData } from 'src/explore/exploreUtils/formData';
 import { URL_PARAMS } from 'src/constants';
 import { SelectValue } from 'antd/lib/select';
 import { isEmpty, isString } from 'lodash';
-
+import { addSuccessToast } from 'src/components/MessageToasts/actions';
+import { addWarningToast } from 'src/components/MessageToasts/actions';
+import useQueryEditor from 'src/SqlLab/hooks/useQueryEditor';
 interface QueryDatabase {
   id?: number;
 }
@@ -96,6 +98,11 @@ interface SaveDatasetModalProps {
   openWindow?: boolean;
   formData?: Omit<QueryFormData, 'datasource'>;
   handleMaterializationNum: (materializationNum: number) => void;
+  allowAsync: boolean;
+  queryEditorId: string;
+  columns: ISaveableDatasource['columns'];
+  handleDescription: (description: string) => void;
+  handleModelName: (modelName: string) =>void;
 }
 
 const Styles = styled.span`
@@ -137,6 +144,17 @@ const updateDataset = async (
 
 const UNTITLED = t('Untitled Dataset');
 
+const onClickModel = (
+  allowAsync: boolean,
+  runQueryModel: (c?: boolean) => void = () => undefined,
+): void => {
+  console.log("run query model click");
+  if (allowAsync) {
+    return runQueryModel(true);
+  }
+  return runQueryModel(false);
+};
+
 export const SaveDataModelModal = ({
   visible,
   onHide,
@@ -148,20 +166,51 @@ export const SaveDataModelModal = ({
   formData = {},
   runQueryModel,
   handleMaterializationNum,
-}: SaveDatasetModalProps) => {
-  const defaultLabel = "DefaultTest";
+  allowAsync,
+  queryEditorId,
+  columns,
+  handleDescription,
+  handleModelName
 
-  const [description, setDescription] = useState<string>( '',
+}: SaveDatasetModalProps) => {
+  const queryEditor = useQueryEditor(queryEditorId, [
+    'autorun',
+    'name',
+    'description',
+    'remoteId',
+    'dbId',
+    'latestQueryId',
+    'queryLimit',
+    'schema',
+    'selectedText',
+    'sql',
+    'tableOptions',
+    'templateParams',
+  ]);
+  const query = useMemo(
+    () => ({
+      ...queryEditor,
+      columns,
+    }),
+    [queryEditor, columns],
   );
+  const defaultLabel = query.name || query.description || t('Undefined');
+  const [description, setDescription] = useState<string>(
+    query.description || '',
+  );
+
   const [label, setLabel] = useState<string>(defaultLabel);
 
   const onLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLabel(e.target.value);
+    handleModelName(e.target.value);
   };
 
   const onDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
+    handleDescription(e.target.value);
   };
+  
   const [materializationNumRadio, setMaterializationNumRadio] = useState(1);
 
   const handleMaterializationNumRadio = (materializationNumRadio: number) => {
@@ -183,7 +232,10 @@ export const SaveDataModelModal = ({
         <>
           <Button
             buttonStyle="primary"
-            onClick={runQueryModel}
+            onClick={() =>
+              {onClickModel(allowAsync, runQueryModel);
+              onHide();}
+            }
             className="m-r-3"
             cta
           >

@@ -27,6 +27,7 @@ from superset import is_feature_enabled
 from superset.errors import SupersetErrorType
 from superset.sqllab.commands.execute import SqlQueryRender
 from superset.sqllab.exceptions import SqlLabException
+from superset.sqllab.sqllab_execution_context import SqlJsonSaveContext
 from superset.utils import core as utils
 
 MSG_OF_1006 = "Issue 1006 - One or more parameters specified in the query are missing."
@@ -44,14 +45,11 @@ PARAMETER_MISSING_ERR = __(
 
 class SqlSaveQueryRenderImpl(SqlQueryRender):
     _sql_template_processor_factory: Callable[..., BaseTemplateProcessor]
-    materialization_num: int
     def __init__(
-        self, sql_template_factory: Callable[..., BaseTemplateProcessor], materialization_num: int
+        self, sql_template_factory: Callable[..., BaseTemplateProcessor], 
     ) -> None:
         self._sql_template_processor_factory = sql_template_factory
-        self.materialization_num = materialization_num
-
-    def render(self, execution_context: SqlJsonExecutionContext) -> str:
+    def render(self, execution_context: SqlJsonSaveContext) -> str:
         query_model = execution_context.query
         try:
             sql_template_processor = self._sql_template_processor_factory(
@@ -62,10 +60,13 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
                 query_model.sql, **execution_context.template_params
             )
             final_query = """
-            INSERT INTO query(query_string, materialization)
-            VALUES (\'{original_query}\', {materialization_num})
-            """.format(rendered_query, self.materialization_num)
-
+            INSERT INTO query(name, query_string, materialization, user_id, description, insert_time)
+            VALUES (\'{name}\' ,\'{original_query}\', {materialization}, {user_id}, \'{description}\', NOW())
+            """.format(name=execution_context.name,
+                       original_query=rendered_query, 
+                       materialization=execution_context.materialization_num,
+                       user_id=execution_context.user_id,
+                       description=execution_context.description)
             self._validate(execution_context, final_query, sql_template_processor)
             return final_query
         except TemplateError as ex:

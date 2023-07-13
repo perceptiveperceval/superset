@@ -29,7 +29,6 @@ import {
   SaveDatasetModal,
   ISaveableDatasource,
 } from 'src/SqlLab/components/SaveDatasetModal';
-import SaveDataModelActionButton from 'src/SqlLab/components/SaveDatasetActionButton';
 import {
   SaveDataModelModal
 } from 'src/SqlLab/components/SaveDataModelModal';
@@ -38,6 +37,7 @@ import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
 import useQueryEditor from 'src/SqlLab/hooks/useQueryEditor';
 import { QueryEditor } from 'src/SqlLab/types';
 import { runQuery } from 'src/SqlLab/actions/sqlLab';
+import { Description } from 'src/components/MetadataBar';
 
 interface SaveQueryProps {
   queryEditorId: string;
@@ -49,12 +49,15 @@ interface SaveQueryProps {
   allowAsync: boolean;
   runQueryModel: (c?: boolean) => void;
   handleMaterializationNum: (materializationNum: number) => void;
+  handleDescription: (description: string) => void;
+  handleModelName: (modelName: string) => void;
 }
 
 const onClickModel = (
   allowAsync: boolean,
   runQueryModel: (c?: boolean) => void = () => undefined,
 ): void => {
+  console.log("run query model click");
   if (allowAsync) {
     return runQueryModel(true);
   }
@@ -87,7 +90,11 @@ const SaveQuery = ({
   saveQueryWarning = null,
   database,
   columns,
+  runQueryModel,
   handleMaterializationNum,
+  allowAsync,
+  handleDescription,
+  handleModelName
 }: SaveQueryProps) => {
 
   const queryEditor = useQueryEditor(queryEditorId, [
@@ -228,8 +235,13 @@ const SaveQuery = ({
         buttonTextOnSave={t('Save & Explore')}  
         buttonTextOnOverwrite={t('Overwrite & Explore')}
         datasource={getDatasourceAsSaveableDataset(query)}
-        runQueryModel={() => onClickModel}
+        runQueryModel={runQueryModel}
         handleMaterializationNum={handleMaterializationNum}
+        allowAsync={allowAsync}
+        queryEditorId={queryEditorId}
+        columns={columns}
+        handleDescription={handleDescription}
+        handleModelName={handleModelName}
       />
       <Modal
         className="save-query-modal"

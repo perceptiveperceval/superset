@@ -171,6 +171,7 @@ def get_sql_results(  # pylint: disable=too-many-arguments
     start_time: Optional[float] = None,
     expand_data: bool = False,
     log_params: Optional[Dict[str, Any]] = None,
+    save_query: bool = False
 ) -> Optional[Dict[str, Any]]:
     """Executes the sql query returns the results."""
     with session_scope(not ctask.request.called_directly) as session:
@@ -185,6 +186,7 @@ def get_sql_results(  # pylint: disable=too-many-arguments
                     start_time=start_time,
                     expand_data=expand_data,
                     log_params=log_params,
+                    save_query=save_query,
                 )
             except Exception as ex:  # pylint: disable=broad-except
                 logger.debug("Query %d: %s", query_id, ex)
@@ -200,6 +202,7 @@ def execute_sql_statement(  # pylint: disable=too-many-arguments,too-many-statem
     cursor: Any,
     log_params: Optional[Dict[str, Any]],
     apply_ctas: bool = False,
+    save_query: bool = False,
 ) -> SupersetResultSet:
     """Executes a single SQL statement"""
     database: Database = query.database
@@ -224,7 +227,7 @@ def execute_sql_statement(  # pylint: disable=too-many-arguments,too-many-statem
     # We are testing to see if more rows exist than the limit.
     increased_limit = None if query.limit is None else query.limit + 1
 
-    if not db_engine_spec.is_readonly_query(parsed_query) and not database.allow_dml:
+    if not db_engine_spec.is_readonly_query(parsed_query) and not database.allow_dml and not save_query:
         raise SupersetErrorException(
             SupersetError(
                 message=__("Only SELECT statements are allowed against this database."),
@@ -392,6 +395,7 @@ def execute_sql_statements(  # pylint: disable=too-many-arguments, too-many-loca
     start_time: Optional[float],
     expand_data: bool,
     log_params: Optional[Dict[str, Any]],
+    save_query: bool = False,
 ) -> Optional[Dict[str, Any]]:
     """Executes the sql query returns the results."""
     if store_results and start_time:
@@ -501,6 +505,7 @@ def execute_sql_statements(  # pylint: disable=too-many-arguments, too-many-loca
                     cursor,
                     log_params,
                     apply_ctas,
+                    save_query,
                 )
             except SqlLabQueryStoppedException:
                 payload.update({"status": QueryStatus.STOPPED})

@@ -2777,3 +2777,24 @@ class Superset(BaseSupersetView):  # pylint: disable=too-many-public-methods
                 "Failed to fetch schemas allowed for csv upload in this database! "
                 "Please contact your Superset Admin!"
             )
+    
+    @api
+    @has_access_api                    
+    @expose("/get_description/", methods=["GET"])
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.import_",
+        log_to_statsd=False,
+    )
+    def get_description(self, table_id: int) -> FlaskResponse:
+        query = (
+                db.session.query(TableColumn)
+                .filter_by(table_id=table_id)
+                )
+            # Apply dashboard base filters
+
+        payload = {
+            "column_name": query.column_name,
+            "description": query.description
+        }
+
+        return json_success(json.dumps(payload, default=utils.json_int_dttm_ser))

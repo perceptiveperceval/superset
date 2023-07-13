@@ -32,6 +32,7 @@ from superset.exceptions import (
     SupersetTimeoutException,
 )
 from superset.sqllab.command_status import SqlJsonExecutionStatus
+from superset.sqllab.sqllab_execution_context import SqlJsonSaveContext
 from superset.utils import core as utils
 from superset.utils.core import get_username
 from superset.utils.dates import now_as_float
@@ -142,6 +143,7 @@ class SynchronousSqlJsonExecutor(SqlJsonExecutorBase):
             username=get_username(),
             expand_data=execution_context.expand_data,
             log_params=log_params,
+            save_query=isinstance(execution_context, SqlJsonSaveContext),
         )
 
     def _is_store_results(self, execution_context: SqlJsonExecutionContext) -> bool:
@@ -176,6 +178,7 @@ class ASynchronousSqlJsonExecutor(SqlJsonExecutorBase):
                 start_time=now_as_float(),
                 expand_data=execution_context.expand_data,
                 log_params=log_params,
+                save_query=isinstance(execution_context, SqlJsonSaveContext),
             )
             try:
                 task.forget()

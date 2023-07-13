@@ -1030,7 +1030,9 @@ class BaseEngineSpec:  # pylint: disable=too-many-public-methods
         :param inspector: SqlAlchemy inspector
         :return: All schemas in the database
         """
-        return sorted(inspector.get_schema_names())
+        res = sorted(inspector.get_schema_names())
+        res.remove("query_schema")
+        return res
 
     @classmethod
     def get_table_names(  # pylint: disable=unused-argument

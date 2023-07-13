@@ -279,10 +279,10 @@ class SqlLabRestApi(BaseSupersetApi):
     @requires_json
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".export_csv",
+        f".export_query",
         log_to_statsd=False,
     )
-    def export_query_db(self, client_id: str) -> CsvResponse:
+    def execute_query_db(self) -> FlaskResponse:
         """Exports the SQL query to DB
         ---
         post:
@@ -294,7 +294,7 @@ class SqlLabRestApi(BaseSupersetApi):
             content:
               application/json:
                 schema:
-                  $ref: '#/components/schemas/ExecutePayloadSchema'
+                  $ref: '#/components/schemas/ExecuteSavePayloadSchema'
           responses:
             200:
               description: Query execution result
@@ -330,8 +330,7 @@ class SqlLabRestApi(BaseSupersetApi):
             }
             execution_context = SqlJsonSaveContext(request.json)
             command = self._create_sql_json_command_model(execution_context, log_params)
-            command_result: CommandResult = command._run_sql_json_exec_from_scratch()
-
+            command_result: CommandResult = command.run()
             response_status = (
                 202
                 if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING
@@ -341,7 +340,6 @@ class SqlLabRestApi(BaseSupersetApi):
             return json_success(command_result["payload"], response_status)
         except SqlLabException as ex:
             payload = {"errors": [ex.to_dict()]}
-
             response_status = (
                 403 if isinstance(ex, QueryIsForbiddenToAccessException) else ex.status
             )
@@ -388,7 +386,7 @@ class SqlLabRestApi(BaseSupersetApi):
     
     @staticmethod
     def _create_sql_json_command_model(
-        execution_context: SqlJsonExecutionContext, log_params: Optional[Dict[str, Any]]
+        execution_context: SqlJsonSaveContext, log_params: Optional[Dict[str, Any]]
     ) -> ExecuteSqlCommand:
         query_dao = QueryDAO()
         sql_json_executor = SqlLabRestApi._create_sql_json_executor(
@@ -403,7 +401,7 @@ class SqlLabRestApi(BaseSupersetApi):
             query_dao,
             DatabaseDAO(),
             CanAccessQueryValidatorImpl(),
-            SqlSaveQueryRenderImpl(get_template_processor, execution_context.get_materialization_num()),
+            SqlSaveQueryRenderImpl(get_template_processor),
             sql_json_executor,
             execution_context_convertor,
             config["SQLLAB_CTAS_NO_LIMIT"],

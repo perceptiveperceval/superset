@@ -254,6 +254,7 @@ WTF_CSRF_EXEMPT_LIST = [
     "superset.views.core.log",
     "superset.views.core.explore_json",
     "superset.charts.data.api.data",
+    "superset.security.api.get_email",
 ]
 
 # Whether to run the web server in debug mode or not

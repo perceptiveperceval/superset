@@ -1578,10 +1578,14 @@ export function runQueryModel(query) {
       templateParams: query.templateParams,
       queryLimit: query.queryLimit,
       expand_data: true,
-      save_type: query.materializationNum
+      save_type: query.save_type,
+      description: query.description,
+      name: query.name,
     };
 
     const search = window.location.search || '';
+    console.log("materialize num query");
+    console.log(query.name);
     return SupersetClient.post({
       endpoint: `/api/v1/sqllab/addmodel/${search}`,
       body: JSON.stringify(postPayload),
@@ -1617,7 +1621,11 @@ export function runQueryFromSqlEditorModel(
   ctas,
   ctasMethod,
   materializationNum,
+  description,
+  modelName,
 ) {
+  console.log("materialize num query form");
+  console.log(modelName);
   return function (dispatch, getState) {
     const qe = getUpToDateQuery(getState(), queryEditor, queryEditor.id);
     const query = {
@@ -1633,7 +1641,9 @@ export function runQueryFromSqlEditorModel(
       ctas,
       ctas_method: ctasMethod,
       updateTabState: !qe.selectedText,
-      materializationNum: materializationNum
+      save_type: materializationNum,
+      description: description,
+      name: modelName,
     };
     dispatch(runQueryModel(query));
   };
