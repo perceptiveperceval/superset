@@ -36,9 +36,6 @@ import {
 import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
 import useQueryEditor from 'src/SqlLab/hooks/useQueryEditor';
 import { QueryEditor } from 'src/SqlLab/types';
-import { runQuery } from 'src/SqlLab/actions/sqlLab';
-import { Description } from 'src/components/MetadataBar';
-
 interface SaveQueryProps {
   queryEditorId: string;
   columns: ISaveableDatasource['columns'];

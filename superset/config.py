@@ -1558,9 +1558,15 @@ class ExtraRelatedQueryFilters(TypedDict, total=False):
 
 EXTRA_RELATED_QUERY_FILTERS: ExtraRelatedQueryFilters = {}
 
+if "SAVE_QUERY_SCHEMA" in os.environ:
+    SAVE_QUERY_SCHEMA = os.environ["SAVE_QUERY_SCHEMA"]
+else: SAVE_QUERY_SCHEMA = "query"
+
 if "HIDDEN_SCHEMAS" in os.environ:
-    HIDDEN_SCHEMAS = os.environ["HIDDEN_SCHEMAS"]
-else: HIDDEN_SCHEMAS = ["query",]
+    HIDDEN_SCHEMAS = os.environ["HIDDEN_SCHEMAS"].append(SAVE_QUERY_SCHEMA)
+else: 
+    HIDDEN_SCHEMAS: List[str] = []
+    HIDDEN_SCHEMAS.append(SAVE_QUERY_SCHEMA)
 
 if "SAVE_QUERY_TABLE" in os.environ:
     SAVE_QUERY_TABLE = os.environ["SAVE_QUERY_TABLE"]

@@ -1569,7 +1569,7 @@ export function runQueryModel(query) {
       json: true,
       runAsync: query.runAsync,
       schema: query.schema,
-      sql: cleanSqlComments(query.sql),
+      sql: query.sql,
       sql_editor_id: query.sqlEditorId,
       tab: query.tab,
       tmp_table_name: query.tempTable,

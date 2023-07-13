@@ -319,7 +319,9 @@ class SqlLabRestApi(BaseSupersetApi):
             500:
               $ref: '#/components/responses/500'
         """
+        
         try:
+            print("starting api")
             self.save_execute_model_schema.load(request.json)
         except ValidationError as error:
             return self.response_400(message=error.messages)
