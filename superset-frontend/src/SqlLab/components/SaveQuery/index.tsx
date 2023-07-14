@@ -29,13 +29,12 @@ import {
   SaveDatasetModal,
   ISaveableDatasource,
 } from 'src/SqlLab/components/SaveDatasetModal';
-import {
-  SaveDataModelModal
-} from 'src/SqlLab/components/SaveDataModelModal';
+import { SaveDataModelModal } from 'src/SqlLab/components/SaveDataModelModal';
 
 import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
 import useQueryEditor from 'src/SqlLab/hooks/useQueryEditor';
 import { QueryEditor } from 'src/SqlLab/types';
+
 interface SaveQueryProps {
   queryEditorId: string;
   columns: ISaveableDatasource['columns'];
@@ -49,17 +48,6 @@ interface SaveQueryProps {
   handleDescription: (description: string) => void;
   handleModelName: (modelName: string) => void;
 }
-
-const onClickModel = (
-  allowAsync: boolean,
-  runQueryModel: (c?: boolean) => void = () => undefined,
-): void => {
-  console.log("run query model click");
-  if (allowAsync) {
-    return runQueryModel(true);
-  }
-  return runQueryModel(false);
-};
 
 type QueryPayload = {
   name: string;
@@ -91,9 +79,8 @@ const SaveQuery = ({
   handleMaterializationNum,
   allowAsync,
   handleDescription,
-  handleModelName
+  handleModelName,
 }: SaveQueryProps) => {
-
   const queryEditor = useQueryEditor(queryEditorId, [
     'autorun',
     'name',
@@ -121,7 +108,7 @@ const SaveQuery = ({
     query.description || '',
   );
   const [label, setLabel] = useState<string>(defaultLabel);
-  
+
   const [showSave, setShowSave] = useState<boolean>(false);
   const [showSaveDatasetModal, setShowSaveDatasetModal] = useState(false);
 
@@ -229,7 +216,7 @@ const SaveQuery = ({
       <SaveDataModelModal
         visible={showSaveDataModelModal}
         onHide={() => setShowSaveDataModelModal(false)}
-        buttonTextOnSave={t('Save & Explore')}  
+        buttonTextOnSave={t('Save & Explore')}
         buttonTextOnOverwrite={t('Overwrite & Explore')}
         datasource={getDatasourceAsSaveableDataset(query)}
         runQueryModel={runQueryModel}

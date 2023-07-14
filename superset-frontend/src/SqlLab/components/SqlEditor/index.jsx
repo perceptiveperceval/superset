@@ -250,22 +250,18 @@ const SqlEditor = ({
   const [showEmptyState, setShowEmptyState] = useState(false);
 
   const [materializationNum, setMaterializationNum] = useState(1);
-  const [description, setDescription] = useState("")
-  const [modelName, setModelName] = useState("")
-  const handleMaterializationNum = (materializationNum) => {
+  const [description, setDescription] = useState('');
+  const [modelName, setModelName] = useState('');
+  const handleMaterializationNum = materializationNum => {
     setMaterializationNum(materializationNum);
-    console.log("materialize num");
-    console.log(materializationNum);
   };
-  const handleDescription = (description) => {
+  const handleDescription = description => {
     setDescription(description);
   };
-  const handleModelName = (modelName) => {
+  const handleModelName = modelName => {
     setModelName(modelName);
-    console.log("materialize num");
-    console.log(modelName);
   };
-  modelName
+
   const sqlEditorRef = useRef(null);
   const northPaneRef = useRef(null);
 
@@ -289,7 +285,7 @@ const SqlEditor = ({
     },
     [ctas, database, defaultQueryLimit, dispatch, queryEditor],
   );
-  
+
   const startQueryModel = useCallback(
     (ctasArg = false, ctas_method = CtasEnum.TABLE) => {
       if (!database) {
@@ -306,11 +302,20 @@ const SqlEditor = ({
           ctas_method,
           materializationNum,
           description,
-          modelName
+          modelName,
         ),
       );
     },
-    [ctas, database, defaultQueryLimit, dispatch, queryEditor, materializationNum, description, modelName],
+    [
+      ctas,
+      database,
+      defaultQueryLimit,
+      dispatch,
+      queryEditor,
+      materializationNum,
+      description,
+      modelName,
+    ],
   );
 
   const stopQuery = useCallback(() => {
@@ -328,7 +333,6 @@ const SqlEditor = ({
 
   const runQueryModel = () => {
     if (database) {
-      console.log("run save model query");
       startQueryModel();
     }
   };

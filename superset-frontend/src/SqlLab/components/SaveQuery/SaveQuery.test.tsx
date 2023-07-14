@@ -32,6 +32,11 @@ const mockedProps = {
   onSave: () => {},
   saveQueryWarning: null,
   columns: [],
+  runQueryModel: () => {},
+  handleMaterializationNum: () => {},
+  allowAsync: false,
+  handleDescription: () => {},
+  handleModelName: () => {},
 };
 
 const mockState = {

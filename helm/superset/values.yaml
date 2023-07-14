@@ -134,7 +134,7 @@ extraVolumeMounts:
 # -- A dictionary of overrides to append at the end of superset_config.py - the name does not matter
 # WARNING: the order is not guaranteed
 # Files can be passed as helm --set-file configOverrides.my-override=my-file.py
-configOverrides:
+configOverrides: #TODO
   {}
   # extend_timeout: |
   #    # Extend timeout to allow long running queries.
@@ -254,7 +254,7 @@ supersetNode:
     - "/bin/sh"
     - "-c"
     - ". {{ .Values.configMountPath }}/superset_bootstrap.sh; /usr/bin/run-server.sh"
-  connections:
+  connections: #TODO
     # -- Change in case of bringing your own redis and then also set redis.enabled:false
     redis_host: '{{ template "superset.fullname" . }}-redis-headless'
     # redis_password: superset
@@ -407,7 +407,7 @@ supersetWorker:
   readinessProbe: {}
 
 # Superset beat configuration (to trigger scheduled jobs like reports)
-supersetCeleryBeat:
+supersetCeleryBeat: #TODO
   # -- This is only required if you intend to use alerts and reports
   enabled: false
   # -- Command
@@ -453,7 +453,7 @@ supersetCeleryBeat:
   podSecurityContext: {}
   containerSecurityContext: {}
 
-supersetCeleryFlower:
+supersetCeleryFlower: #TODO
   # -- Enables a Celery flower deployment (management UI to monitor celery jobs)
   # WARNING: on superset 1.x, this requires a Superset image that has `flower<1.0.0` installed (which is NOT the case of the default images)
   # flower>=1.0.0 requires Celery 5+ which Superset 1.5 does not support
@@ -693,7 +693,7 @@ init:
 # -- Configuration values for the postgresql dependency.
 # ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 # @default -- see `values.yaml`
-postgresql:
+postgresql: #TODO
   ##
   ## Use the PostgreSQL chart dependency.
   ## Set to false if bringing your own PostgreSQL.
@@ -714,7 +714,7 @@ postgresql:
     tag: "14.6.0-debian-11-r13"
 
   ## PostgreSQL Primary parameters
-  primary:
+  primary: #TODO
     ##
     ## Persistent Volume Storage configuration.
     ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes
