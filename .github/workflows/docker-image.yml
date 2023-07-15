@@ -26,7 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: perceptiveperceval/superset
+          images: perceptiveperceval/thesis
           tags: type=sha
           
       - name: Build and push
@@ -37,10 +37,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.PAT }}
-          repository: vietcheems/fdp-helm-chart
-          event-type: new-image-superset
-          client-payload: '{"tag": "${{ steps.meta.outputs.tags }}"}'
+#       - name: Repository Dispatch
+#         uses: peter-evans/repository-dispatch@v2
+#         with:
+#           token: ${{ secrets.PAT }}
+#           repository: vietcheems/fdp-helm-chart
+#           event-type: new-image-superset
+#           client-payload: '{"tag": "${{ steps.meta.outputs.tags }}"}'
