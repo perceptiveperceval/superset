@@ -1,0 +1,47 @@
+name: Push Docker Image
+
+# Controls when the workflow will run
+on:
+#   push:
+#     branches: [ "2.1.0-thesis" ]
+  pull_request:
+    branches: [ "2.1.0-thesis" ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: PROD
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: jazzdung/dagster-financial
+          tags: type=sha
+          
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT }}
+          repository: vietcheems/fdp-helm-chart
+          event-type: new-image
+          client-payload: '{"tag": "${{ steps.meta.outputs.tags }}"}'
