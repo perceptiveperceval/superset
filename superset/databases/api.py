@@ -1467,7 +1467,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                   )
           res = {}
           for table in table_query:
-              res[table.id]={"table_name":table.table_name, "table_desc":table.description, "columns":[]}
+              res[table.id]={"table_name":table.table_name, "table_schema":table.schema, "table_desc":table.description, "columns":[]}
               for col in column_query:
                   res[table.id]["columns"].append({
                       col.column_name:col.description
