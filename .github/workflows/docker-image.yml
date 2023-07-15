@@ -1,6 +1,5 @@
 name: Push Docker Image
 
-# Controls when the workflow will run
 on:
 #   push:
 #     branches: [ "2.1.0-thesis" ]
@@ -27,7 +26,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: jazzdung/dagster-financial
+          images: perceptiveperceval/superset
           tags: type=sha
           
       - name: Build and push
@@ -43,5 +42,5 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           repository: vietcheems/fdp-helm-chart
-          event-type: new-image
+          event-type: new-image-superset
           client-payload: '{"tag": "${{ steps.meta.outputs.tags }}"}'
