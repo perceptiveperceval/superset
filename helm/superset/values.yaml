@@ -135,7 +135,11 @@ extraVolumeMounts:
 # WARNING: the order is not guaranteed
 # Files can be passed as helm --set-file configOverrides.my-override=my-file.py
 configOverrides: #TODO
-  {}
+  override_file: |
+      SAVE_QUERY_SCHEMA = "financial_query",
+      AVAILABLE_SCHEMAS = ["financial_clean", "financial_user"],
+      SAVE_QUERY_TABLE = "query"
+
   # extend_timeout: |
   #    # Extend timeout to allow long running queries.
   #    SUPERSET_WEBSERVER_TIMEOUT = ...
