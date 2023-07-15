@@ -177,7 +177,7 @@ configOverrides: #TODO
 
 # -- Same as above but the values are files
 configOverridesFiles:
-  {override_file=config_override.py}
+  {}
   # extend_timeout: extend_timeout.py
   # enable_oauth: enable_oauth.py
 
