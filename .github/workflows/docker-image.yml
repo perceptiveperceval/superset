@@ -1,8 +1,8 @@
 name: Push Docker Image
 
 on:
-#   push:
-#     branches: [ "2.1.0-thesis" ]
+  push:
+    branches: [ "2.1.0-thesis" ]
   pull_request:
     branches: [ "2.1.0-thesis" ]
 
@@ -37,10 +37,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           
-#       - name: Repository Dispatch
-#         uses: peter-evans/repository-dispatch@v2
-#         with:
-#           token: ${{ secrets.PAT }}
-#           repository: vietcheems/fdp-helm-chart
-#           event-type: new-image-superset
-#           client-payload: '{"tag": "${{ steps.meta.outputs.tags }}"}'
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT }}
+          repository: vietcheems/fdp-helm-chart
+          event-type: new-image-superset
+          client-payload: '{"tag": "${{ steps.meta.outputs.tags }}"}'
