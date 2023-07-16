@@ -1460,17 +1460,16 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                   .filter(SqlaTable.database_id.in_(db_ids),
                           SqlaTable.is_sqllab_view==0)
                   )
-          table_ids = [r.id for r in table_query]
-          column_query = (
-                  db.session.query(TableColumn)
-                  .filter(TableColumn.table_id.in_(table_ids))
-                  )
           res = {}
           for table in table_query:
               res[table.id]={"table_name":table.table_name, "table_schema":table.schema, "table_desc":table.description, "columns":[]}
+              column_query = (
+                  db.session.query(TableColumn)
+                  .filter(TableColumn.table_id==table.id)
+                  )
               for col in column_query:
                   res[table.id]["columns"].append({
-                      col.column_name:col.description
+                      "name":col.column_name, "description":col.description
                   })
           return self.response(200, result = res)
         except ValidationError as error:
