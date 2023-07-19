@@ -184,7 +184,6 @@ export const SaveDataModelModal = ({
       }
     >
       <Styles>
-        (
         <Form layout="vertical">
           <Row>
             <Col xs={24}>
@@ -230,7 +229,6 @@ export const SaveDataModelModal = ({
             </Col>
           </Row>
         </Form>
-        )
       </Styles>
     </StyledModal>
   );
