@@ -39,6 +39,7 @@ from superset.views.base_api import BaseSupersetApi, statsd_metrics
 from superset.utils import core as utils
 from superset import db
 from superset.annotation_layers.schemas import get_delete_ids_schema
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,13 +81,16 @@ class GuestTokenCreateSchema(PermissiveSchema):
     resources = fields.List(fields.Nested(ResourceSchema), required=True)
     rls = fields.List(fields.Nested(RlsRuleSchema), required=True)
 
+
 class GetEmailSchema(PermissiveSchema):
     user_ids = fields.List(fields.Integer())
+
 
 class NoticeSchema(PermissiveSchema):
     name = fields.String()
     status = fields.String()
     exception = fields.String()
+
 
 guest_token_create_schema = GuestTokenCreateSchema()
 email_create_schema = GetEmailSchema()
@@ -171,20 +175,18 @@ class SecurityRestApi(BaseSupersetApi):
             # todo validate stuff:
             # make sure username doesn't reference an existing user
             # check rls rules for validity?
-            token = self.appbuilder.sm.create_guest_access_token(
-                body["user"], body["resources"], body["rls"]
-            )
+            token = self.appbuilder.sm.create_guest_access_token(body["user"], body["resources"], body["rls"])
             return self.response(200, token=token)
         except EmbeddedDashboardNotFoundError as error:
             return self.response_400(message=error.message)
         except ValidationError as error:
             return self.response_400(message=error.messages)
-        
+
     @event_logger.log_this
     @protect()
     @safe
-    @statsd_metrics                  
-    @rison(get_delete_ids_schema) 
+    @statsd_metrics
+    @rison(get_delete_ids_schema)
     @expose("/get_email/", methods=["GET"])
     def get_email(self, **kwargs: Any) -> Response:
         """Response
@@ -219,19 +221,16 @@ class SecurityRestApi(BaseSupersetApi):
         """
         ids = kwargs["rison"]
         try:
+            query = (
+                db.session.query(AboutUser).filter(AboutUser.id.in_(ids))
+                # .with_entities(AboutUser.email)
+            )
+            emails = [{r.id: r.email} for r in query]
 
-          query = (
-                  db.session.query(AboutUser)
-                  .filter(AboutUser.id.in_(ids))
-                  # .with_entities(AboutUser.email)
-                  )
-          emails = [r.email for r in query]
-
-          # payload = {
-          #     "email": query.email
-          # }
-          # print(query)
-          return self.response(200, emails=emails)
+            # payload = {
+            #     "email": query.email
+            # }
+            # print(query)
+            return self.response(200, emails=emails)
         except ValidationError as error:
             return self.response_400(message=error.messages)
-    
