@@ -102,7 +102,7 @@ from superset.views.base_api import (
 from superset import db
 from superset.annotation_layers.schemas import get_delete_ids_schema
 from superset.connectors.sqla.models import SqlaTable, TableColumn
-
+from sqlalchemy.sql.expression import false
 logger = logging.getLogger(__name__)
 
 
@@ -1419,7 +1419,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         db_ids = kwargs["rison"]
         try:
             table_query = db.session.query(SqlaTable).filter(
-                SqlaTable.database_id.in_(db_ids), SqlaTable.is_sqllab_view == False
+                SqlaTable.database_id.in_(db_ids), SqlaTable.is_sqllab_view == false()
             )
             res = {}
             for table in table_query:
