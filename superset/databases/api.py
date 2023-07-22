@@ -102,6 +102,7 @@ from superset.views.base_api import (
 from superset import db
 from superset.annotation_layers.schemas import get_delete_ids_schema
 from superset.connectors.sqla.models import SqlaTable, TableColumn
+
 logger = logging.getLogger(__name__)
 
 
@@ -342,9 +343,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
 
             # Return SSH Tunnel and hide passwords if any
             if item.get("ssh_tunnel"):
-                item["ssh_tunnel"] = mask_password_info(
-                    new_model.ssh_tunnel  # pylint: disable=no-member
-                )
+                item["ssh_tunnel"] = mask_password_info(new_model.ssh_tunnel)  # pylint: disable=no-member
 
             return self.response(201, id=new_model.id, result=item)
         except DatabaseInvalidError as ex:
@@ -561,9 +560,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
             schemas = [schema for schema in schemas if schema in app.config["AVAILABLE_SCHEMAS"]]
             return self.response(200, result=schemas)
         except OperationalError:
-            return self.response(
-                500, message="There was an error connecting to the database"
-            )
+            return self.response(500, message="There was an error connecting to the database")
         except SupersetException as ex:
             return self.response(ex.status, message=ex.message)
 
@@ -640,13 +637,10 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".table_metadata",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".table_metadata",
         log_to_statsd=False,
     )
-    def table_metadata(
-        self, database: Database, table_name: str, schema_name: str
-    ) -> FlaskResponse:
+    def table_metadata(self, database: Database, table_name: str, schema_name: str) -> FlaskResponse:
         """Table schema info
         ---
         get:
@@ -703,13 +697,10 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".table_extra_metadata",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".table_extra_metadata",
         log_to_statsd=False,
     )
-    def table_extra_metadata(
-        self, database: Database, table_name: str, schema_name: str
-    ) -> FlaskResponse:
+    def table_extra_metadata(self, database: Database, table_name: str, schema_name: str) -> FlaskResponse:
         """Table schema info
         ---
         get:
@@ -755,9 +746,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
 
         parsed_schema = parse_js_uri_path_item(schema_name, eval_undefined=True)
         table_name = cast(str, parse_js_uri_path_item(table_name))
-        payload = database.db_engine_spec.extra_table_metadata(
-            database, table_name, parsed_schema
-        )
+        payload = database.db_engine_spec.extra_table_metadata(database, table_name, parsed_schema)
         return self.response(200, **payload)
 
     @expose("/<int:pk>/select_star/<table_name>/", methods=["GET"])
@@ -770,9 +759,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.select_star",
         log_to_statsd=False,
     )
-    def select_star(
-        self, database: Database, table_name: str, schema_name: Optional[str] = None
-    ) -> FlaskResponse:
+    def select_star(self, database: Database, table_name: str, schema_name: Optional[str] = None) -> FlaskResponse:
         """Table schema info
         ---
         get:
@@ -813,9 +800,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         """
         self.incr_stats("init", self.select_star.__name__)
         try:
-            result = database.select_star(
-                table_name, schema_name, latest_partition=True, show_cols=True
-            )
+            result = database.select_star(table_name, schema_name, latest_partition=True, show_cols=True)
         except NoSuchTableError:
             self.incr_stats("error", self.select_star.__name__)
             return self.response(404, message="Table not found in the database")
@@ -826,8 +811,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @protect()
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".test_connection",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".test_connection",
         log_to_statsd=False,
     )
     @requires_json
@@ -877,8 +861,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".related_objects",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".related_objects",
         log_to_statsd=False,
     )
     def related_objects(self, pk: int) -> Response:
@@ -1046,9 +1029,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         buf = BytesIO()
         with ZipFile(buf, "w") as bundle:
             try:
-                for file_name, file_content in ExportDatabasesCommand(
-                    requested_ids
-                ).run():
+                for file_name, file_content in ExportDatabasesCommand(requested_ids).run():
                     with bundle.open(f"{root}/{file_name}", "w") as fp:
                         fp.write(file_content.encode())
             except DatabaseNotFoundError:
@@ -1129,16 +1110,10 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         if not contents:
             raise NoValidFilesFoundError()
 
-        passwords = (
-            json.loads(request.form["passwords"])
-            if "passwords" in request.form
-            else None
-        )
+        passwords = json.loads(request.form["passwords"]) if "passwords" in request.form else None
         overwrite = request.form.get("overwrite") == "true"
 
-        command = ImportDatabasesCommand(
-            contents, passwords=passwords, overwrite=overwrite
-        )
+        command = ImportDatabasesCommand(contents, passwords=passwords, overwrite=overwrite)
         command.run()
         return self.response(200, message="OK")
 
@@ -1147,8 +1122,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".function_names",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".function_names",
         log_to_statsd=False,
     )
     def function_names(self, pk: int) -> Response:
@@ -1268,12 +1242,8 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                 and hasattr(engine_spec, "sqlalchemy_uri_placeholder")
                 and getattr(engine_spec, "default_driver") in drivers
             ):
-                payload[
-                    "parameters"
-                ] = engine_spec.parameters_json_schema()  # type: ignore
-                payload[
-                    "sqlalchemy_uri_placeholder"
-                ] = engine_spec.sqlalchemy_uri_placeholder  # type: ignore
+                payload["parameters"] = engine_spec.parameters_json_schema()  # type: ignore
+                payload["sqlalchemy_uri_placeholder"] = engine_spec.sqlalchemy_uri_placeholder  # type: ignore
 
             available_databases.append(payload)
 
@@ -1286,11 +1256,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         # add others
         response.extend(
             sorted(
-                (
-                    payload
-                    for payload in available_databases
-                    if not payload["preferred"]
-                ),
+                (payload for payload in available_databases if not payload["preferred"]),
                 key=lambda payload: payload["name"],
             )
         )
@@ -1301,8 +1267,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @protect()
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".validate_parameters",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".validate_parameters",
         log_to_statsd=False,
     )
     @requires_json
@@ -1358,8 +1323,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @protect()
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".delete_ssh_tunnel",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".delete_ssh_tunnel",
         log_to_statsd=False,
     )
     def delete_ssh_tunnel(self, pk: int) -> Response:
@@ -1415,11 +1379,11 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                 exc_info=True,
             )
             return self.response_400(message=str(ex))
-                        
+
     @event_logger.log_this
     @safe
     @statsd_metrics
-    @rison(get_delete_ids_schema) 
+    @rison(get_delete_ids_schema)
     @expose("/get_tables_descriptions/", methods=["GET"])
     def get_tables_descriptions(self, **kwargs: Any) -> Response:
         """Response
@@ -1427,7 +1391,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         ---
         get:
           description: >-
-            Fetches 
+            Fetches
           parameters:
           - in: query
             name: q
@@ -1454,23 +1418,20 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         """
         db_ids = kwargs["rison"]
         try:
-
-          table_query = (
-                  db.session.query(SqlaTable)
-                  .filter(SqlaTable.database_id.in_(db_ids),
-                          SqlaTable.is_sqllab_view==0)
-                  )
-          res = {}
-          for table in table_query:
-              res[table.id]={"table_name":table.table_name, "table_schema":table.schema, "table_desc":table.description, "columns":[]}
-              column_query = (
-                  db.session.query(TableColumn)
-                  .filter(TableColumn.table_id==table.id)
-                  )
-              for col in column_query:
-                  res[table.id]["columns"].append({
-                      "name":col.column_name, "description":col.description
-                  })
-          return self.response(200, result = res)
+            table_query = db.session.query(SqlaTable).filter(
+                SqlaTable.database_id.in_(db_ids), SqlaTable.is_sqllab_view == False
+            )
+            res = {}
+            for table in table_query:
+                res[table.id] = {
+                    "table_name": table.table_name,
+                    "table_schema": table.schema,
+                    "table_desc": table.description,
+                    "columns": [],
+                }
+                column_query = db.session.query(TableColumn).filter(TableColumn.table_id == table.id)
+                for col in column_query:
+                    res[table.id]["columns"].append({"name": col.column_name, "description": col.description})
+            return self.response(200, result=res)
         except ValidationError as error:
             return self.response_400(message=error.messages)
