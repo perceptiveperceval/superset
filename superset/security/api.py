@@ -190,7 +190,7 @@ class SecurityRestApi(BaseSupersetApi):
     @expose("/get_email/", methods=["GET"])
     def get_email(self, **kwargs: Any) -> Response:
         """Response
-        Returns an user email from Superset metadatabase
+        Returns user emails from Superset metadatabase
         ---
         get:
           description: >-
@@ -225,7 +225,7 @@ class SecurityRestApi(BaseSupersetApi):
                 db.session.query(AboutUser).filter(AboutUser.id.in_(ids))
                 # .with_entities(AboutUser.email)
             )
-            emails = [{r.id: r.email} for r in query]
+            emails = dict(zip([r.id for r in query], [r.email for r in query]))
 
             # payload = {
             #     "email": query.email
