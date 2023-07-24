@@ -87,6 +87,8 @@ const Styles = styled.span`
   }
 `;
 
+const regexCheck = new RegExp('[a-zA-Z0-9_]{1,63}$');
+
 const onClickModel = (
   allowAsync: boolean,
   runQueryModel: (c?: boolean) => void = () => undefined,
@@ -142,9 +144,12 @@ export const SaveDataModelModal = ({
 
   const [label, setLabel] = useState<string>(defaultLabel);
 
+  const [isDisabled, setIsDisabled] = useState(true);
+
   const onLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLabel(e.target.value);
     handleModelName(e.target.value);
+    setIsDisabled(!regexCheck.test(e.target.value));
   };
 
   const onDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -158,9 +163,6 @@ export const SaveDataModelModal = ({
     handleMaterializationNum(materializationNumRadio);
     setMaterializationNumRadio(materializationNumRadio);
   };
-  // const [materialization, setMaterialization] = useState(
-  //   MaterializeRadioState.TABLE,
-  // );
 
   return (
     <StyledModal
@@ -176,6 +178,7 @@ export const SaveDataModelModal = ({
               onHide();
             }}
             className="m-r-3"
+            disabled={isDisabled}
             cta
           >
             {t('Save as Model')}
