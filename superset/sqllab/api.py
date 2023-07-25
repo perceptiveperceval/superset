@@ -81,6 +81,7 @@ class SqlLabRestApi(BaseSupersetApi):
     openapi_spec_tag = "SQL Lab"
     openapi_spec_component_schemas = (
         ExecutePayloadSchema,
+        ExecuteSavePayloadSchema,
         QueryExecutionResponseSchema,
     )
 
@@ -88,8 +89,7 @@ class SqlLabRestApi(BaseSupersetApi):
     @protect()
     @statsd_metrics
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".export_csv",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".export_csv",
         log_to_statsd=False,
     )
     def export_csv(self, client_id: str) -> CsvResponse:
@@ -127,9 +127,7 @@ class SqlLabRestApi(BaseSupersetApi):
         query, data, row_count = result["query"], result["data"], result["count"]
 
         quoted_csv_name = parse.quote(query.name)
-        response = CsvResponse(
-            data, headers=generate_download_headers("csv", quoted_csv_name)
-        )
+        response = CsvResponse(data, headers=generate_download_headers("csv", quoted_csv_name))
         event_info = {
             "event_type": "data_export",
             "client_id": client_id,
@@ -140,9 +138,7 @@ class SqlLabRestApi(BaseSupersetApi):
             "exported_format": "csv",
         }
         event_rep = repr(event_info)
-        logger.debug(
-            "CSV exported: %s", event_rep, extra={"superset_event": event_info}
-        )
+        logger.debug("CSV exported: %s", event_rep, extra={"superset_event": event_info})
         return response
 
     @expose("/results/")
@@ -150,8 +146,7 @@ class SqlLabRestApi(BaseSupersetApi):
     @statsd_metrics
     @rison(sql_lab_get_results_schema)
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".get_results",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".get_results",
         log_to_statsd=False,
     )
     def get_results(self, **kwargs: Any) -> FlaskResponse:
@@ -193,9 +188,7 @@ class SqlLabRestApi(BaseSupersetApi):
         result = SqlExecutionResultsCommand(key=key, rows=rows).run()
         # return the result without special encoding
         return json_success(
-            json.dumps(
-                result, default=utils.json_iso_dttm_ser, ignore_nan=True, encoding=None
-            ),
+            json.dumps(result, default=utils.json_iso_dttm_ser, ignore_nan=True, encoding=None),
             200,
         )
 
@@ -204,8 +197,7 @@ class SqlLabRestApi(BaseSupersetApi):
     @statsd_metrics
     @requires_json
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".get_results",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".get_results",
         log_to_statsd=False,
     )
     def execute_sql_query(self) -> FlaskResponse:
@@ -251,26 +243,18 @@ class SqlLabRestApi(BaseSupersetApi):
             return self.response_400(message=error.messages)
 
         try:
-            log_params = {
-                "user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))
-            }
+            log_params = {"user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))}
             execution_context = SqlJsonExecutionContext(request.json)
             command = self._create_sql_json_command(execution_context, log_params)
             command_result: CommandResult = command.run()
 
-            response_status = (
-                202
-                if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING
-                else 200
-            )
+            response_status = 202 if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING else 200
             # return the execution result without special encoding
             return json_success(command_result["payload"], response_status)
         except SqlLabException as ex:
             payload = {"errors": [ex.to_dict()]}
 
-            response_status = (
-                403 if isinstance(ex, QueryIsForbiddenToAccessException) else ex.status
-            )
+            response_status = 403 if isinstance(ex, QueryIsForbiddenToAccessException) else ex.status
             return self.response(response_status, **payload)
 
     @expose("/addmodel/", methods=["POST"])
@@ -278,8 +262,7 @@ class SqlLabRestApi(BaseSupersetApi):
     @statsd_metrics
     @requires_json
     @event_logger.log_this_with_context(
-        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".export_query",
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".export_query",
         log_to_statsd=False,
     )
     def execute_query_db(self) -> FlaskResponse:
@@ -319,32 +302,23 @@ class SqlLabRestApi(BaseSupersetApi):
             500:
               $ref: '#/components/responses/500'
         """
-        
+
         try:
-            print("starting api")
             self.save_execute_model_schema.load(request.json)
         except ValidationError as error:
             return self.response_400(message=error.messages)
 
         try:
-            log_params = {
-                "user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))
-            }
+            log_params = {"user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))}
             execution_context = SqlJsonSaveContext(request.json)
             command = self._create_sql_json_command_model(execution_context, log_params)
             command_result: CommandResult = command.run()
-            response_status = (
-                202
-                if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING
-                else 200
-            )
+            response_status = 202 if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING else 200
             # return the execution result without special encoding
             return json_success(command_result["payload"], response_status)
         except SqlLabException as ex:
             payload = {"errors": [ex.to_dict()]}
-            response_status = (
-                403 if isinstance(ex, QueryIsForbiddenToAccessException) else ex.status
-            )
+            response_status = 403 if isinstance(ex, QueryIsForbiddenToAccessException) else ex.status
             return self.response(response_status, **payload)
 
     @staticmethod
@@ -352,13 +326,9 @@ class SqlLabRestApi(BaseSupersetApi):
         execution_context: SqlJsonExecutionContext, log_params: Optional[Dict[str, Any]]
     ) -> ExecuteSqlCommand:
         query_dao = QueryDAO()
-        sql_json_executor = SqlLabRestApi._create_sql_json_executor(
-            execution_context, query_dao
-        )
+        sql_json_executor = SqlLabRestApi._create_sql_json_executor(execution_context, query_dao)
         execution_context_convertor = ExecutionContextConvertor()
-        execution_context_convertor.set_max_row_in_display(
-            int(config.get("DISPLAY_MAX_ROW"))  # type: ignore
-        )
+        execution_context_convertor.set_max_row_in_display(int(config.get("DISPLAY_MAX_ROW")))  # type: ignore
         return ExecuteSqlCommand(
             execution_context,
             query_dao,
@@ -370,10 +340,9 @@ class SqlLabRestApi(BaseSupersetApi):
             config["SQLLAB_CTAS_NO_LIMIT"],
             log_params,
         )
+
     @staticmethod
-    def _create_sql_json_executor(
-        execution_context: SqlJsonExecutionContext, query_dao: QueryDAO
-    ) -> SqlJsonExecutor:
+    def _create_sql_json_executor(execution_context: SqlJsonExecutionContext, query_dao: QueryDAO) -> SqlJsonExecutor:
         sql_json_executor: SqlJsonExecutor
         if execution_context.is_run_asynchronous():
             sql_json_executor = ASynchronousSqlJsonExecutor(query_dao, get_sql_results)
@@ -385,19 +354,15 @@ class SqlLabRestApi(BaseSupersetApi):
                 is_feature_enabled("SQLLAB_BACKEND_PERSISTENCE"),
             )
         return sql_json_executor
-    
+
     @staticmethod
     def _create_sql_json_command_model(
         execution_context: SqlJsonSaveContext, log_params: Optional[Dict[str, Any]]
     ) -> ExecuteSqlCommand:
         query_dao = QueryDAO()
-        sql_json_executor = SqlLabRestApi._create_sql_json_executor(
-            execution_context, query_dao
-        )
+        sql_json_executor = SqlLabRestApi._create_sql_json_executor(execution_context, query_dao)
         execution_context_convertor = ExecutionContextConvertor()
-        execution_context_convertor.set_max_row_in_display(
-            int(config.get("DISPLAY_MAX_ROW"))  # type: ignore
-        )
+        execution_context_convertor.set_max_row_in_display(int(config.get("DISPLAY_MAX_ROW")))  # type: ignore
         return ExecuteSqlCommand(
             execution_context,
             query_dao,

@@ -86,6 +86,18 @@ class GetEmailSchema(PermissiveSchema):
     user_ids = fields.List(fields.Integer())
 
 
+class GetEmailMailsResponseSchema(Schema):
+    id = fields.Integer(description="The user's id")
+    desc = fields.String(description="The user's email")
+
+
+class GetEmailResponseSchema(PermissiveSchema):
+    emails = fields.List(
+        fields.Nested(GetEmailMailsResponseSchema),
+        description="A list of user ids and their emails",
+    )
+
+
 class NoticeSchema(PermissiveSchema):
     name = fields.String()
     status = fields.String()
@@ -156,11 +168,7 @@ class SecurityRestApi(BaseSupersetApi):
               description: Result contains the guest token
               content:
                 application/json:
-                  schema:
-                    type: object
-                    properties:
-                        token:
-                          type: string
+                  schema: GetEmailResponseSchema
             401:
               $ref: '#/components/responses/401'
             400:
@@ -190,28 +198,38 @@ class SecurityRestApi(BaseSupersetApi):
     @expose("/get_email/", methods=["GET"])
     def get_email(self, **kwargs: Any) -> Response:
         """Response
-        Returns user emails from Superset metadatabase
+        Returns users' id and their corresponding email from Superset metadatabase
         ---
         get:
           description: >-
-            Fetches a user email
+            Fetches users' emails from ids
           parameters:
           - in: query
-            name: q
+            name: user_ids
+            description: User IDs to fetch mails for
             content:
               application/json:
                 schema:
                   $ref: '#/components/schemas/get_delete_ids_schema'
           responses:
             200:
-              description: Result contains the user email
+              description: Result containing users email
               content:
                 application/json:
                   schema:
                     type: object
                     properties:
-                        email:
-                          type: string
+                      emails:
+                        type: object
+                        properties: {
+                          id: {
+                            type: integer
+                          },
+                          mail: {
+                            type: string
+                          }
+                        }
+
             401:
               $ref: '#/components/responses/401'
             400:
@@ -225,7 +243,7 @@ class SecurityRestApi(BaseSupersetApi):
                 db.session.query(AboutUser).filter(AboutUser.id.in_(ids))
                 # .with_entities(AboutUser.email)
             )
-            emails = dict(zip([r.id for r in query], [r.email for r in query]))
+            emails = [{r.id: r.email} for r in query]
 
             # payload = {
             #     "email": query.email

@@ -5693,6 +5693,83 @@
         ],
         "type": "object"
       },
+      "ExecuteSavePayloadSchema": {
+        "properties": {
+          "name": {
+            "nullable": false,
+            "type": "string"
+          },
+          "save_type": {
+            "nullable": true,
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "client_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "ctas_method": {
+            "nullable": true,
+            "type": "string"
+          },
+          "database_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "expand_data": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "json": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "queryLimit": {
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "runAsync": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "schema": {
+            "nullable": true,
+            "type": "string"
+          },
+          "select_as_cta": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "sql": {
+            "type": "string"
+          },
+          "sql_editor_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "tab": {
+            "nullable": true,
+            "type": "string"
+          },
+          "templateParams": {
+            "nullable": true,
+            "type": "string"
+          },
+          "tmp_table_name": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "database_id",
+          "sql"
+        ],
+        "type": "object"
+      },
       "ExploreContextSchema": {
         "properties": {
           "dataset": {
@@ -19949,6 +20026,67 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ExecutePayloadSchema"
+              }
+            }
+          },
+          "description": "SQL query and params",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryExecutionResponseSchema"
+                }
+              }
+            },
+            "description": "Query execution result"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryExecutionResponseSchema"
+                }
+              }
+            },
+            "description": "Query execution result, query still running"
+          },
+          "400": {
+            "$ref": "#/components/responses/400"
+          },
+          "401": {
+            "$ref": "#/components/responses/401"
+          },
+          "403": {
+            "$ref": "#/components/responses/403"
+          },
+          "404": {
+            "$ref": "#/components/responses/404"
+          },
+          "500": {
+            "$ref": "#/components/responses/500"
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "tags": [
+          "SQL Lab"
+        ]
+      }
+    },
+    "/api/v1/sqllab/addmodel/": {
+      "post": {
+        "description": "Starts the execution of a SQL query",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteSavePayloadSchema"
               }
             }
           },

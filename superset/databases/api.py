@@ -76,6 +76,7 @@ from superset.databases.schemas import (
     TableMetadataResponseSchema,
     ValidateSQLRequest,
     ValidateSQLResponse,
+    GetDescResponseSchema,
 )
 from superset.databases.ssh_tunnel.commands.delete import DeleteSSHTunnelCommand
 from superset.databases.ssh_tunnel.commands.exceptions import (
@@ -103,6 +104,7 @@ from superset import db
 from superset.annotation_layers.schemas import get_delete_ids_schema
 from superset.connectors.sqla.models import SqlaTable, TableColumn
 from sqlalchemy.sql.expression import false
+
 logger = logging.getLogger(__name__)
 
 
@@ -237,6 +239,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         SchemasResponseSchema,
         ValidateSQLRequest,
         ValidateSQLResponse,
+        GetDescResponseSchema,
     )
 
     @expose("/<int:pk>", methods=["GET"])
@@ -1383,9 +1386,8 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
     @event_logger.log_this
     @safe
     @statsd_metrics
-    @rison(get_delete_ids_schema)
     @expose("/get_tables_descriptions/", methods=["GET"])
-    def get_tables_descriptions(self, **kwargs: Any) -> Response:
+    def get_tables_descriptions(self) -> Response:
         """Response
         Returns an descriptions from all tables of a database
         ---
@@ -1394,11 +1396,10 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
             Fetches
           parameters:
           - in: query
-            name: q
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/get_delete_ids_schema'
+            name: db_id
+            description: Database ID to query
+            schema:
+                  type: integer
           responses:
             200:
               description: Result contains the tables' descriptions
@@ -1407,8 +1408,10 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                   schema:
                     type: object
                     properties:
-                        email:
-                          type: string
+                      result:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GetDescResponseSchema'
             401:
               $ref: '#/components/responses/401'
             400:
@@ -1416,22 +1419,24 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
             500:
               $ref: '#/components/responses/500'
         """
-        db_ids = kwargs["rison"]
+        db_id = request.args.get("db_id")
         try:
             table_query = db.session.query(SqlaTable).filter(
-                SqlaTable.database_id.in_(db_ids), SqlaTable.is_sqllab_view == false()
+                SqlaTable.database_id == db_id, SqlaTable.is_sqllab_view == false()
             )
-            res = {}
+            res = []
             for table in table_query:
-                res[table.id] = {
-                    "table_name": table.table_name,
-                    "table_schema": table.schema,
-                    "table_desc": table.description,
-                    "columns": [],
-                }
+                res.append(
+                    {
+                        "table_name": table.table_name,
+                        "table_schema": table.schema,
+                        "table_desc": table.description,
+                        "columns": [],
+                    }
+                )
                 column_query = db.session.query(TableColumn).filter(TableColumn.table_id == table.id)
                 for col in column_query:
-                    res[table.id]["columns"].append({"name": col.column_name, "description": col.description})
+                    res[-1]["columns"].append({"name": col.column_name, "description": col.description})
             return self.response(200, result=res)
         except ValidationError as error:
             return self.response_400(message=error.messages)

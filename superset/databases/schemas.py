@@ -74,11 +74,7 @@ allow_file_upload_description = (
 )
 allow_ctas_description = "Allow CREATE TABLE AS option in SQL Lab"
 allow_cvas_description = "Allow CREATE VIEW AS option in SQL Lab"
-allow_dml_description = (
-    "Allow users to run non-SELECT statements "
-    "(UPDATE, DELETE, CREATE, ...) "
-    "in SQL Lab"
-)
+allow_dml_description = "Allow users to run non-SELECT statements " "(UPDATE, DELETE, CREATE, ...) " "in SQL Lab"
 configuration_method_description = (
     "Configuration_method is used on the frontend to "
     "inform the backend whether to explode parameters "
@@ -92,8 +88,7 @@ impersonate_user_description = (
     "via hive.server2.proxy.user property."
 )
 force_ctas_schema_description = (
-    "When allowing CREATE TABLE AS option in SQL Lab, "
-    "this option forces the table to be created in this schema"
+    "When allowing CREATE TABLE AS option in SQL Lab, " "this option forces the table to be created in this schema"
 )
 encrypted_extra_description = markdown(
     "JSON string containing additional connection configuration.<br/>"
@@ -141,8 +136,7 @@ sqlalchemy_uri_description = markdown(
     True,
 )
 server_cert_description = markdown(
-    "Optional CA_BUNDLE contents to validate HTTPS requests. Only available "
-    "on certain database engines.",
+    "Optional CA_BUNDLE contents to validate HTTPS requests. Only available " "on certain database engines.",
     True,
 )
 
@@ -190,9 +184,7 @@ def encrypted_extra_validator(value: str) -> str:
         try:
             json.loads(value)
         except json.JSONDecodeError as ex:
-            raise ValidationError(
-                [_("Field cannot be decoded by JSON. %(msg)s", msg=str(ex))]
-            ) from ex
+            raise ValidationError([_("Field cannot be decoded by JSON. %(msg)s", msg=str(ex))]) from ex
     return value
 
 
@@ -205,9 +197,7 @@ def extra_validator(value: str) -> str:
         try:
             extra_ = json.loads(value)
         except json.JSONDecodeError as ex:
-            raise ValidationError(
-                [_("Field cannot be decoded by JSON. %(msg)s", msg=str(ex))]
-            ) from ex
+            raise ValidationError([_("Field cannot be decoded by JSON. %(msg)s", msg=str(ex))]) from ex
         else:
             metadata_signature = inspect.signature(MetaData)
             for key in extra_.get("metadata_params", {}):
@@ -253,9 +243,7 @@ class DatabaseParametersSchemaMixin:  # pylint: disable=too-few-public-methods
     )
 
     @pre_load
-    def build_sqlalchemy_uri(
-        self, data: Dict[str, Any], **kwargs: Any
-    ) -> Dict[str, Any]:
+    def build_sqlalchemy_uri(self, data: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
         """
         Build SQLAlchemy URI from separate parameters.
 
@@ -265,36 +253,20 @@ class DatabaseParametersSchemaMixin:  # pylint: disable=too-few-public-methods
         """
         parameters = data.pop("parameters", {})
         # TODO(AAfghahi) standardize engine.
-        engine = (
-            data.pop("engine", None)
-            or parameters.pop("engine", None)
-            or data.pop("backend", None)
-        )
+        engine = data.pop("engine", None) or parameters.pop("engine", None) or data.pop("backend", None)
         driver = data.pop("driver", None)
 
         configuration_method = data.get("configuration_method")
         if configuration_method == ConfigurationMethod.DYNAMIC_FORM:
             if not engine:
                 raise ValidationError(
-                    [
-                        _(
-                            "An engine must be specified when passing "
-                            "individual parameters to a database."
-                        )
-                    ]
+                    [_("An engine must be specified when passing " "individual parameters to a database.")]
                 )
             engine_spec = get_engine_spec(engine, driver)
 
-            if not hasattr(engine_spec, "build_sqlalchemy_uri") or not hasattr(
-                engine_spec, "parameters_schema"
-            ):
+            if not hasattr(engine_spec, "build_sqlalchemy_uri") or not hasattr(engine_spec, "parameters_schema"):
                 raise ValidationError(
-                    [
-                        _(
-                            'Engine spec "InvalidEngine" does not support '
-                            "being configured via individual parameters."
-                        )
-                    ]
+                    [_('Engine spec "InvalidEngine" does not support ' "being configured via individual parameters.")]
                 )
 
             # validate parameters
@@ -399,9 +371,7 @@ class DatabasePostSchema(Schema, DatabaseParametersSchemaMixin):
         required=True,
         validate=Length(1, 250),
     )
-    cache_timeout = fields.Integer(
-        description=cache_timeout_description, allow_none=True
-    )
+    cache_timeout = fields.Integer(description=cache_timeout_description, allow_none=True)
     expose_in_sqllab = fields.Boolean(description=expose_in_sqllab_description)
     allow_run_async = fields.Boolean(description=allow_run_async_description)
     allow_file_upload = fields.Boolean(description=allow_file_upload_description)
@@ -446,9 +416,7 @@ class DatabasePutSchema(Schema, DatabaseParametersSchemaMixin):
         allow_none=True,
         validate=Length(1, 250),
     )
-    cache_timeout = fields.Integer(
-        description=cache_timeout_description, allow_none=True
-    )
+    cache_timeout = fields.Integer(description=cache_timeout_description, allow_none=True)
     expose_in_sqllab = fields.Boolean(description=expose_in_sqllab_description)
     allow_run_async = fields.Boolean(description=allow_run_async_description)
     allow_file_upload = fields.Boolean(description=allow_file_upload_description)
@@ -482,7 +450,6 @@ class DatabasePutSchema(Schema, DatabaseParametersSchemaMixin):
 
 
 class DatabaseTestConnectionSchema(Schema, DatabaseParametersSchemaMixin):
-
     rename_encrypted_extra = pre_load(rename_encrypted_extra)
 
     database_name = fields.String(
@@ -528,9 +495,7 @@ class TableMetadataColumnsResponseSchema(Schema):
 
 class TableMetadataForeignKeysIndexesResponseSchema(Schema):
     column_names = fields.List(
-        fields.String(
-            description="A list of column names that compose the foreign key or index"
-        )
+        fields.String(description="A list of column names that compose the foreign key or index")
     )
     name = fields.String(description="The name of the foreign key or index")
     options = fields.Nested(TableMetadataOptionsResponseSchema)
@@ -541,9 +506,7 @@ class TableMetadataForeignKeysIndexesResponseSchema(Schema):
 
 
 class TableMetadataPrimaryKeyResponseSchema(Schema):
-    column_names = fields.List(
-        fields.String(description="A list of column names that compose the primary key")
-    )
+    column_names = fields.List(fields.String(description="A list of column names that compose the primary key"))
     name = fields.String(description="The primary key index name")
     type = fields.String()
 
@@ -562,9 +525,7 @@ class TableMetadataResponseSchema(Schema):
         fields.Nested(TableMetadataForeignKeysIndexesResponseSchema),
         description="A list of indexes and their metadata",
     )
-    primaryKey = fields.Nested(
-        TableMetadataPrimaryKeyResponseSchema, description="Primary keys metadata"
-    )
+    primaryKey = fields.Nested(TableMetadataPrimaryKeyResponseSchema, description="Primary keys metadata")
     selectStar = fields.String(description="SQL select star")
 
 
@@ -616,16 +577,12 @@ class DatabaseRelatedDashboard(Schema):
 
 class DatabaseRelatedCharts(Schema):
     count = fields.Integer(description="Chart count")
-    result = fields.List(
-        fields.Nested(DatabaseRelatedChart), description="A list of dashboards"
-    )
+    result = fields.List(fields.Nested(DatabaseRelatedChart), description="A list of dashboards")
 
 
 class DatabaseRelatedDashboards(Schema):
     count = fields.Integer(description="Dashboard count")
-    result = fields.List(
-        fields.Nested(DatabaseRelatedDashboard), description="A list of dashboards"
-    )
+    result = fields.List(fields.Nested(DatabaseRelatedDashboard), description="A list of dashboards")
 
 
 class DatabaseRelatedObjectsResponse(Schema):
@@ -649,18 +606,14 @@ class ImportV1DatabaseExtraSchema(Schema):
         # changed the V1 schema. We need to support exports made after that PR and
         # before this PR.
         if "schemas_allowed_for_file_upload" in data:
-            data["schemas_allowed_for_csv_upload"] = data.pop(
-                "schemas_allowed_for_file_upload"
-            )
+            data["schemas_allowed_for_csv_upload"] = data.pop("schemas_allowed_for_file_upload")
 
         # Fix ``schemas_allowed_for_csv_upload`` being a string.
         # Due to a bug in the database modal, some databases might have been
         # saved and exported with a string for ``schemas_allowed_for_csv_upload``.
         schemas_allowed_for_csv_upload = data.get("schemas_allowed_for_csv_upload")
         if isinstance(schemas_allowed_for_csv_upload, str):
-            data["schemas_allowed_for_csv_upload"] = json.loads(
-                schemas_allowed_for_csv_upload
-            )
+            data["schemas_allowed_for_csv_upload"] = json.loads(schemas_allowed_for_csv_upload)
 
         return data
 
@@ -676,9 +629,7 @@ class ImportV1DatabaseExtraSchema(Schema):
 
 class ImportV1DatabaseSchema(Schema):
     @pre_load
-    def fix_allow_csv_upload(
-        self, data: Dict[str, Any], **kwargs: Any
-    ) -> Dict[str, Any]:
+    def fix_allow_csv_upload(self, data: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
         """
         Fix for ``allow_csv_upload`` .
         """
@@ -740,3 +691,18 @@ def encrypted_field_properties(self, field: Any, **_) -> Dict[str, Any]:  # type
         if self.openapi_version.major > 2:
             ret["x-encrypted-extra"] = True
     return ret
+
+
+
+class GetDescColumnsResponseSchema(Schema):
+    name = fields.String(description="The column name")
+    desc = fields.String(description="The column description")
+    
+class GetDescResponseSchema(Schema):
+    table_name = fields.String(description="The name of the table")
+    table_desc = fields.String(description="The description of the table")
+    table_schema = fields.String(description="The schema of the table")
+    columns = fields.List(
+        fields.Nested(GetDescColumnsResponseSchema),
+        description="A list of columns and their description",
+    )
