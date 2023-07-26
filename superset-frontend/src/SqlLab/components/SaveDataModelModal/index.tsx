@@ -87,7 +87,7 @@ const Styles = styled.span`
   }
 `;
 
-const regexCheck = new RegExp('[a-zA-Z0-9_]{1,63}$');
+const regexCheck = /^[a-zA-Z0-9_]{1,63}$/;
 
 const onClickModel = (
   allowAsync: boolean,
