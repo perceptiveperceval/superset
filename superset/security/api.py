@@ -30,14 +30,13 @@ from superset.embedded_dashboard.commands.exceptions import (
     EmbeddedDashboardNotFoundError,
 )
 from superset.extensions import event_logger
-from superset.models.ab_user import AboutUser
 from superset.security.guest_token import GuestTokenResourceType
 from superset.superset_typing import FlaskResponse
 from superset.tasks.utils import get_current_user
 from superset.views.base import json_success
 from superset.views.base_api import BaseSupersetApi, statsd_metrics
 from superset.utils import core as utils
-from superset import db
+from superset import db, security_manager
 from superset.annotation_layers.schemas import get_delete_ids_schema
 
 logger = logging.getLogger(__name__)
@@ -240,7 +239,7 @@ class SecurityRestApi(BaseSupersetApi):
         ids = kwargs["rison"]
         try:
             query = (
-                db.session.query(AboutUser).filter(AboutUser.id.in_(ids))
+                db.session.query(security_manager.user_model).filter(security_manager.user_model.id.in_(ids))
                 # .with_entities(AboutUser.email)
             )
             emails = [{r.id: r.email} for r in query]
