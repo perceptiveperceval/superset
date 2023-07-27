@@ -210,9 +210,6 @@ export const SaveDataModelModal = ({
                 <Radio className="sdm-radio" value={2}>
                   {t('View')}
                 </Radio>
-                <Radio className="sdm-radio" value={3}>
-                  {t('Incremental')}
-                </Radio>
               </Radio.Group>
             </Col>
           </Row>
