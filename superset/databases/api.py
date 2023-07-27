@@ -559,9 +559,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
                 cache_timeout=database.schema_cache_timeout,
                 force=kwargs["rison"].get("force", False),
             )
-            schemas = security_manager.get_schemas_accessible_by_user(database, schemas)
-            schemas = [schema for schema in schemas if schema in app.config["AVAILABLE_SCHEMAS"]]
-            return self.response(200, result=schemas)
+            return self.response(200, result=security_manager.get_schemas_accessible_by_user(database, schemas))
         except OperationalError:
             return self.response(500, message="There was an error connecting to the database")
         except SupersetException as ex:
