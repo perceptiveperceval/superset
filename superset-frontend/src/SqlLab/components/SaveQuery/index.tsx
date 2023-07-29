@@ -25,10 +25,7 @@ import { Menu } from 'src/components/Menu';
 import { Form, FormItem } from 'src/components/Form';
 import Modal from 'src/components/Modal';
 import SaveDatasetActionButton from 'src/SqlLab/components/SaveDatasetActionButton';
-import {
-  SaveDatasetModal,
-  ISaveableDatasource,
-} from 'src/SqlLab/components/SaveDatasetModal';
+import { ISaveableDatasource } from 'src/SqlLab/components/SaveDatasetModal';
 import { SaveDataModelModal } from 'src/SqlLab/components/SaveDataModelModal';
 
 import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
@@ -110,7 +107,6 @@ const SaveQuery = ({
   const [label, setLabel] = useState<string>(defaultLabel);
 
   const [showSave, setShowSave] = useState<boolean>(false);
-  const [showSaveDatasetModal, setShowSaveDatasetModal] = useState(false);
 
   // const [showSaveModel, setShowSaveModel] = useState<boolean>(false);
   const [showSaveDataModelModal, setShowSaveDataModelModal] = useState(false);
