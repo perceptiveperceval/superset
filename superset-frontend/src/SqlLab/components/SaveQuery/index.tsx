@@ -70,7 +70,7 @@ const Styles = styled.span`
 
 const SaveQuery = ({
   queryEditorId,
-  onSave = () => { },
+  onSave = () => {},
   onUpdate,
   saveQueryWarning = null,
   database,
