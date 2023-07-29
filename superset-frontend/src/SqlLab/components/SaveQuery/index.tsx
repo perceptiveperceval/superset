@@ -70,7 +70,7 @@ const Styles = styled.span`
 
 const SaveQuery = ({
   queryEditorId,
-  onSave = () => {},
+  onSave = () => { },
   onUpdate,
   saveQueryWarning = null,
   database,
@@ -205,13 +205,6 @@ const SaveQuery = ({
       <SaveDatasetActionButton
         setShowSave={setShowSave}
         overlayMenu={canExploreDatabase ? overlayMenu : null}
-      />
-      <SaveDatasetModal
-        visible={showSaveDatasetModal}
-        onHide={() => setShowSaveDatasetModal(false)}
-        buttonTextOnSave={t('Save & Explore')}
-        buttonTextOnOverwrite={t('Overwrite & Explore')}
-        datasource={getDatasourceAsSaveableDataset(query)}
       />
       <SaveDataModelModal
         visible={showSaveDataModelModal}

@@ -93,33 +93,24 @@ class CacheRestApi(BaseSupersetModelRestApi):
             if ds_obj:
                 datasource_uids.add(ds_obj.uid)
 
-        cache_key_objs = (
-            db.session.query(CacheKey)
-            .filter(CacheKey.datasource_uid.in_(datasource_uids))
-            .all()
-        )
+        cache_key_objs = db.session.query(CacheKey).filter(CacheKey.datasource_uid.in_(datasource_uids)).all()
         cache_keys = [c.cache_key for c in cache_key_objs]
+        print(f"Removing these cache {datasource_uids}")
         if cache_key_objs:
             all_keys_deleted = cache_manager.cache.delete_many(*cache_keys)
 
             if not all_keys_deleted:
                 # expected behavior as keys may expire and cache is not a
                 # persistent storage
-                logger.info(
-                    "Some of the cache keys were not deleted in the list %s", cache_keys
-                )
+                logger.info("Some of the cache keys were not deleted in the list %s", cache_keys)
 
             try:
-                delete_stmt = (
-                    CacheKey.__table__.delete().where(  # pylint: disable=no-member
-                        CacheKey.cache_key.in_(cache_keys)
-                    )
+                delete_stmt = CacheKey.__table__.delete().where(  # pylint: disable=no-member
+                    CacheKey.cache_key.in_(cache_keys)
                 )
                 db.session.execute(delete_stmt)
                 db.session.commit()
-                stats_logger_manager.instance.gauge(
-                    "invalidated_cache", len(cache_keys)
-                )
+                stats_logger_manager.instance.gauge("invalidated_cache", len(cache_keys))
                 logger.info(
                     "Invalidated %s cache records for %s datasources",
                     len(cache_keys),

@@ -45,12 +45,13 @@ PARAMETER_MISSING_ERR = __(
 
 class SqlSaveQueryRenderImpl(SqlQueryRender):
     _sql_template_processor_factory: Callable[..., BaseTemplateProcessor]
-    
+
     def __init__(
-        self, sql_template_factory: Callable[..., BaseTemplateProcessor], 
+        self,
+        sql_template_factory: Callable[..., BaseTemplateProcessor],
     ) -> None:
         self._sql_template_processor_factory = sql_template_factory
-    
+
     def render(self, execution_context: SqlJsonSaveContext) -> str:
         query_model = execution_context.query
         try:
@@ -64,14 +65,16 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
             final_query = """
             INSERT INTO {schema_name}.{table_name}(name, query_string, materialization, user_id, description, insert_time)
             VALUES (\'{name}\' ,\'{original_query}\', {materialization}, {user_id}, \'{description}\', NOW())
-            """.format(name=execution_context.name,
-                       original_query=rendered_query, 
-                       materialization=execution_context.materialization_num,
-                       user_id=execution_context.user_id,
-                       description=execution_context.description,
-                       schema_name=app.config["SAVE_QUERY_SCHEMA"],
-                       table_name=app.config["SAVE_QUERY_TABLE"],
-                       )
+            """.format(
+                name=execution_context.name,
+                original_query=rendered_query,
+                materialization=execution_context.materialization_num,
+                user_id=execution_context.user_id,
+                description=execution_context.description,
+                schema_name=app.config["SAVE_QUERY_SCHEMA"],
+                table_name=app.config["SAVE_QUERY_TABLE"],
+            )
+            print(final_query)
             self._validate(execution_context, final_query, sql_template_processor)
             return final_query
         except TemplateError as ex:
@@ -87,13 +90,9 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
         if is_feature_enabled("ENABLE_TEMPLATE_PROCESSING"):
             # pylint: disable=protected-access
             syntax_tree = sql_template_processor._env.parse(rendered_query)
-            undefined_parameters = find_undeclared_variables(  # type: ignore
-                syntax_tree
-            )
+            undefined_parameters = find_undeclared_variables(syntax_tree)  # type: ignore
             if undefined_parameters:
-                self._raise_undefined_parameter_exception(
-                    execution_context, undefined_parameters
-                )
+                self._raise_undefined_parameter_exception(execution_context, undefined_parameters)
 
     def _raise_undefined_parameter_exception(
         self, execution_context: SqlJsonExecutionContext, undefined_parameters: Any
@@ -120,15 +119,11 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
             },
         )
 
-    def _raise_template_exception(
-        self, ex: Exception, execution_context: SqlJsonExecutionContext
-    ) -> None:
+    def _raise_template_exception(self, ex: Exception, execution_context: SqlJsonExecutionContext) -> None:
         raise SqlSaveQueryRenderException(
             sql_json_execution_context=execution_context,
             error_type=SupersetErrorType.INVALID_TEMPLATE_PARAMS_ERROR,
-            reason_message=__(
-                "The query contains one or more malformed template parameters."
-            ),
+            reason_message=__("The query contains one or more malformed template parameters."),
             suggestion_help_msg=__(
                 "Please check your query and confirm that all template "
                 "parameters are surround by double braces, for example, "
