@@ -18,11 +18,10 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Radio } from 'src/components/Radio';
 import { Input, TextArea } from 'src/components/Input';
 import StyledModal from 'src/components/Modal';
 import { Form, FormItem } from 'src/components/Form';
-import { Row, Col, RadioChangeEvent } from 'src/components';
+import { Row, Col } from 'src/components';
 import Button from 'src/components/Button';
 import { styled, t, QueryResponse, QueryFormData } from '@superset-ui/core';
 import useQueryEditor from 'src/SqlLab/hooks/useQueryEditor';
