@@ -1618,7 +1618,6 @@ export function runQueryFromSqlEditorModel(
   tempTable,
   ctas,
   ctasMethod,
-  materializationNum,
   descriptionText,
   modelName,
 ) {
@@ -1637,7 +1636,6 @@ export function runQueryFromSqlEditorModel(
       ctas,
       ctas_method: ctasMethod,
       updateTabState: !qe.selectedText,
-      save_type: materializationNum,
       description: descriptionText,
       name: modelName,
     };

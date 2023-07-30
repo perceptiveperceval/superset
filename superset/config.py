@@ -1559,6 +1559,9 @@ class ExtraRelatedQueryFilters(TypedDict, total=False):
 EXTRA_RELATED_QUERY_FILTERS: ExtraRelatedQueryFilters = {}
 
 
+SAVE_QUERY_SCHEMA = "query"
+SAVE_QUERY_TABLE = "saved_query"
+
 # -------------------------------------------------------------------
 # *                WARNING:  STOP EDITING  HERE                    *
 # -------------------------------------------------------------------

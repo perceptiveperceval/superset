@@ -249,12 +249,9 @@ const SqlEditor = ({
   const [createAs, setCreateAs] = useState('');
   const [showEmptyState, setShowEmptyState] = useState(false);
 
-  const [materializationNum, setMaterializationNum] = useState(1);
   const [description, setDescription] = useState('');
   const [modelName, setModelName] = useState('');
-  const handleMaterializationNum = materializationNum => {
-    setMaterializationNum(materializationNum);
-  };
+
   const handleDescription = description => {
     setDescription(description);
   };
@@ -300,7 +297,6 @@ const SqlEditor = ({
           ctasArg ? ctas : '',
           ctasArg,
           ctas_method,
-          materializationNum,
           description,
           modelName,
         ),
@@ -312,7 +308,6 @@ const SqlEditor = ({
       defaultQueryLimit,
       dispatch,
       queryEditor,
-      materializationNum,
       description,
       modelName,
     ],
@@ -703,7 +698,6 @@ const SqlEditor = ({
               database={database}
               allowAsync={database ? database.allow_run_async : false}
               runQueryModel={runQueryModel}
-              handleMaterializationNum={handleMaterializationNum}
               handleDescription={handleDescription}
               handleModelName={handleModelName}
             />

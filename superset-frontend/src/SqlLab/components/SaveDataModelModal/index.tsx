@@ -67,7 +67,7 @@ interface SaveDatasetModalProps {
   runQueryModel: () => void;
   openWindow?: boolean;
   formData?: Omit<QueryFormData, 'datasource'>;
-  handleMaterializationNum: (materializationNum: number) => void;
+
   allowAsync: boolean;
   queryEditorId: string;
   columns: ISaveableDatasource['columns'];
@@ -109,7 +109,6 @@ export const SaveDataModelModal = ({
   openWindow = true,
   formData = {},
   runQueryModel,
-  handleMaterializationNum,
   allowAsync,
   queryEditorId,
   columns,
@@ -157,13 +156,6 @@ export const SaveDataModelModal = ({
     handleDescription(e.target.value);
   };
 
-  const [materializationNumRadio, setMaterializationNumRadio] = useState(1);
-
-  const handleMaterializationNumRadio = (materializationNumRadio: number) => {
-    handleMaterializationNum(materializationNumRadio);
-    setMaterializationNumRadio(materializationNumRadio);
-  };
-
   return (
     <StyledModal
       show={visible}
@@ -195,25 +187,6 @@ export const SaveDataModelModal = ({
               </FormItem>
             </Col>
           </Row>
-          <br />
-          <Row>
-            <Col xs={24}>
-              <Radio.Group
-                onChange={(e: RadioChangeEvent) => {
-                  handleMaterializationNumRadio(Number(e.target.value));
-                }}
-                value={materializationNumRadio}
-              >
-                <Radio className="sdm-radio" value={1}>
-                  {t('Table')}
-                </Radio>
-                <Radio className="sdm-radio" value={2}>
-                  {t('View')}
-                </Radio>
-              </Radio.Group>
-            </Col>
-          </Row>
-          <br />
           <Row>
             <Col xs={24}>
               <FormItem label={t('Description')}>

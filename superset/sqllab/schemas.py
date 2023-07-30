@@ -44,7 +44,6 @@ class ExecutePayloadSchema(Schema):
 
 class ExecuteSavePayloadSchema(Schema):
     name = fields.String(allow_none=False)
-    save_type = fields.Integer(allow_none=False)
     description = fields.String(allow_none=True)
     database_id = fields.Integer(required=True)
     sql = fields.String(required=True)

@@ -137,10 +137,3 @@ export interface QueryCostEstimate {
   cost: Record<string, any>[];
   error: string;
 }
-
-export enum MaterializeRadioState {
-  TABLE = 1,
-  VIEW = 2,
-  INCREMENTAL = 3,
-  EPHEMEREAL = 4,
-}

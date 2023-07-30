@@ -5699,10 +5699,6 @@
             "nullable": false,
             "type": "string"
           },
-          "save_type": {
-            "nullable": true,
-            "type": "string"
-          },
           "description": {
             "nullable": true,
             "type": "string"

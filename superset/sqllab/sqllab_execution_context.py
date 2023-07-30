@@ -185,7 +185,6 @@ class SqlJsonExecutionContext:  # pylint: disable=too-many-instance-attributes
 
 @dataclass
 class SqlJsonSaveContext(SqlJsonExecutionContext):
-    materialization_num: int
     name:str
     description: str
     def __init__(self, query_params: Dict[str, Any]):
@@ -197,11 +196,8 @@ class SqlJsonSaveContext(SqlJsonExecutionContext):
 
     def _init_from_query_params(self, query_params: Dict[str, Any]) -> None:
         SqlJsonExecutionContext._init_from_query_params(self, query_params)
-        self.materialization_num = cast(int, query_params.get("save_type"))
         self.description = cast(str, query_params.get("description"))
-        self.name = cast(str, query_params.get("name"))
-    def get_materialization_num(self) -> int:
-        return self.materialization_num    
+        self.name = cast(str, query_params.get("name"))   
 
 class CreateTableAsSelect:  # pylint: disable=too-few-public-methods
     ctas_method: CtasMethod
