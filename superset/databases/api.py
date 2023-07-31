@@ -1391,7 +1391,7 @@ class DatabaseRestApi(BaseSupersetModelRestApi):
         ---
         get:
           description: >-
-            Fetches
+            Fetches descriptions of all columns and tables in the database
           parameters:
           - in: query
             name: db_id
