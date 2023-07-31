@@ -167,7 +167,11 @@ class SecurityRestApi(BaseSupersetApi):
               description: Result contains the guest token
               content:
                 application/json:
-                  schema: GetEmailResponseSchema
+                  schema:
+                    type: object
+                    properties:
+                        token:
+                          type: string
             401:
               $ref: '#/components/responses/401'
             400:
@@ -221,7 +225,7 @@ class SecurityRestApi(BaseSupersetApi):
                       emails:
                         type: array
                         items:
-                          $ref: '#/components/schemas/GetDescResponseSchema'
+                          $ref: 'GetEmailResponseSchema'
 
             401:
               $ref: '#/components/responses/401'
