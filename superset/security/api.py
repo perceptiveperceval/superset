@@ -219,15 +219,9 @@ class SecurityRestApi(BaseSupersetApi):
                     type: object
                     properties:
                       emails:
-                        type: object
-                        properties: {
-                          id: {
-                            type: integer
-                          },
-                          mail: {
-                            type: string
-                          }
-                        }
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/GetDescResponseSchema'
 
             401:
               $ref: '#/components/responses/401'
