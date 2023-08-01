@@ -317,6 +317,11 @@ class SqlLabRestApi(BaseSupersetApi):
             sql_statement = request.json["sql"]
             parsed_query = ParsedQuery(sql_statement)
 
+            # SQL check
+            if not sql_statement:
+              return self.response_400(message="Query can not be empty")
+
+
             # Syntax check
             validation, error = check_string(sql_statement,add_semicolon=True)
             if not validation:
@@ -324,12 +329,12 @@ class SqlLabRestApi(BaseSupersetApi):
 
             # SELECT check
             if not parsed_query.is_select():
-                return self.response_400(message="Not SELECT query")
+                return self.response_400(message="Only `SELECT` statements are allowed")
             
             #Single query check
             statements = parsed_query.get_statements()
             if len(statements) > 1:
-                return self.response_400(message="Not a single query")
+                return self.response_400(message="Only single queries supported")
 
             command = self._create_sql_json_command_model(execution_context, log_params)
             command_result: CommandResult = command.run()
