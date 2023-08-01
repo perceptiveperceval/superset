@@ -31,6 +31,7 @@ from superset.jinja_context import get_template_processor
 from superset.models.sql_lab import Query
 from superset.queries.dao import QueryDAO
 from superset.sql_lab import get_sql_results
+from superset.sql_parse import ParsedQuery
 from superset.sqllab.command_status import SqlJsonExecutionStatus
 from superset.sqllab.commands.execute import CommandResult, ExecuteSqlCommand
 from superset.sqllab.commands.export import SqlResultExportCommand
@@ -59,6 +60,8 @@ from superset.superset_typing import FlaskResponse
 from superset.utils import core as utils
 from superset.views.base import CsvResponse, generate_download_headers, json_success
 from superset.views.base_api import BaseSupersetApi, requires_json, statsd_metrics
+
+from pgsanity.pgsanity import check_string
 
 config = app.config
 logger = logging.getLogger(__name__)
@@ -198,7 +201,7 @@ class SqlLabRestApi(BaseSupersetApi):
     @requires_json
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}" f".get_results",
-        log_to_statsd=False,
+        log_to_statsd=True,
     )
     def execute_sql_query(self) -> FlaskResponse:
         """Executes a SQL query
@@ -311,6 +314,17 @@ class SqlLabRestApi(BaseSupersetApi):
         try:
             log_params = {"user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))}
             execution_context = SqlJsonSaveContext(request.json)
+            sql_statement = request.json["sql"]
+            parsed_query = ParsedQuery(sql_statement)
+
+            if not parsed_query.is_select():
+                return self.response_400(message="Not SELECT query")
+            
+            validation, error = check_string(sql_statement,add_semicolon=True)
+            if not validation:
+                return self.response_400(message="Invalid Syntax: {error}".format(error=error))
+
+
             command = self._create_sql_json_command_model(execution_context, log_params)
             command_result: CommandResult = command.run()
             response_status = 202 if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING else 200
