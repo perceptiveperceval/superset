@@ -25,7 +25,10 @@ import { Menu } from 'src/components/Menu';
 import { Form, FormItem } from 'src/components/Form';
 import Modal from 'src/components/Modal';
 import SaveDatasetActionButton from 'src/SqlLab/components/SaveDatasetActionButton';
-import { ISaveableDatasource } from 'src/SqlLab/components/SaveDatasetModal';
+import {
+  SaveDatasetModal,
+  ISaveableDatasource,
+} from 'src/SqlLab/components/SaveDatasetModal';
 import { SaveDataModelModal } from 'src/SqlLab/components/SaveDataModelModal';
 
 import { getDatasourceAsSaveableDataset } from 'src/utils/datasourceUtils';
@@ -41,6 +44,7 @@ interface SaveQueryProps {
   database: Record<string, any>;
   allowAsync: boolean;
   runQueryModel: (c?: boolean) => void;
+  handleMaterializationNum: (materializationNum: number) => void;
   handleDescription: (description: string) => void;
   handleModelName: (modelName: string) => void;
 }
@@ -105,6 +109,7 @@ const SaveQuery = ({
   const [label, setLabel] = useState<string>(defaultLabel);
 
   const [showSave, setShowSave] = useState<boolean>(false);
+  const [showSaveDatasetModal, setShowSaveDatasetModal] = useState(false);
 
   // const [showSaveModel, setShowSaveModel] = useState<boolean>(false);
   const [showSaveDataModelModal, setShowSaveDataModelModal] = useState(false);
@@ -196,6 +201,13 @@ const SaveQuery = ({
       <SaveDatasetActionButton
         setShowSave={setShowSave}
         overlayMenu={canExploreDatabase ? overlayMenu : null}
+      />
+      <SaveDatasetModal
+        visible={showSaveDatasetModal}
+        onHide={() => setShowSaveDatasetModal(false)}
+        buttonTextOnSave={t('Save & Explore')}
+        buttonTextOnOverwrite={t('Overwrite & Explore')}
+        datasource={getDatasourceAsSaveableDataset(query)}
       />
       <SaveDataModelModal
         visible={showSaveDataModelModal}
