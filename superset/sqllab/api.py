@@ -317,13 +317,19 @@ class SqlLabRestApi(BaseSupersetApi):
             sql_statement = request.json["sql"]
             parsed_query = ParsedQuery(sql_statement)
 
-            if not parsed_query.is_select():
-                return self.response_400(message="Not SELECT query")
-            
+            # Syntax check
             validation, error = check_string(sql_statement,add_semicolon=True)
             if not validation:
                 return self.response_400(message="Invalid Syntax: {error}".format(error=error))
 
+            # SELECT check
+            if not parsed_query.is_select():
+                return self.response_400(message="Not SELECT query")
+            
+            #Single query check
+            statements = parsed_query.get_statements()
+            if len(statements) > 1:
+                return self.response_400(message="Not a single query")
 
             command = self._create_sql_json_command_model(execution_context, log_params)
             command_result: CommandResult = command.run()
