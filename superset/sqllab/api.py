@@ -313,7 +313,6 @@ class SqlLabRestApi(BaseSupersetApi):
 
         try:
             log_params = {"user_agent": cast(Optional[str], request.headers.get("USER_AGENT"))}
-            execution_context = SqlJsonSaveContext(request.json)
             sql_statement = request.json["sql"]
             parsed_query = ParsedQuery(sql_statement)
 
@@ -335,7 +334,10 @@ class SqlLabRestApi(BaseSupersetApi):
             statements = parsed_query.get_statements()
             if len(statements) > 1:
                 return self.response_400(message="Only single queries supported")
+            
+            request.json["sql"] = statements[0]
 
+            execution_context = SqlJsonSaveContext(request.json)
             command = self._create_sql_json_command_model(execution_context, log_params)
             command_result: CommandResult = command.run()
             response_status = 202 if command_result["status"] == SqlJsonExecutionStatus.QUERY_IS_RUNNING else 200
