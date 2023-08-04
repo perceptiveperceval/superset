@@ -29,6 +29,7 @@ from superset.sqllab.commands.execute import SqlQueryRender
 from superset.sqllab.exceptions import SqlLabException
 from superset.sqllab.sqllab_execution_context import SqlJsonSaveContext
 from superset.utils import core as utils
+import re
 
 MSG_OF_1006 = "Issue 1006 - One or more parameters specified in the query are missing."
 
@@ -62,6 +63,9 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
             rendered_query = sql_template_processor.process_template(
                 query_model.sql, **execution_context.template_params
             )
+
+            rendered_query = re.sub(r"\'", "''", rendered_query)
+
             final_query = """
             INSERT INTO {schema_name}.{table_name}
                 (name, 
@@ -82,6 +86,7 @@ class SqlSaveQueryRenderImpl(SqlQueryRender):
                 schema_name=app.config["SAVE_QUERY_SCHEMA"],
                 table_name=app.config["SAVE_QUERY_TABLE"],
             )
+            print(final_query)
             self._validate(execution_context, final_query, sql_template_processor)
             return final_query
         except TemplateError as ex:
